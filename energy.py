@@ -22,20 +22,20 @@ DNNS       = ['Llama', 'OPT', 'Resnet']
 PRECISIONS = ['FP16', 'BF16', 'FP8']
 
 small_total   = {'FP16': np.array([16.97, 15.94, 18.44]),
-                 'BF16': np.array([ 0.00 , 8.44,  0.00]),
-                 'FP8':  np.array([ 9.47,  8.44, 18.44])}
+                 'BF16': np.array([ 9.47,  8.44, 11.55]),
+                 'FP8':  np.array([ 9.47,  8.44, 18.41])}
 
 large_total   = {'FP16': np.array([16.05, 16.16, 16.35]),
-                 'BF16': np.array([-0.37,  9.88, 16.35]),
-                 'FP8':  np.array([ 9.84,  9.88,  0.00])}
+                 'BF16': np.array([ 9.84,  9.88, 10.18]),
+                 'FP8':  np.array([ 9.84,  9.88, 16.34])}
 
 small_refresh = {'FP16': np.array([66.66, 66.64, 66.82]),
-                 'BF16': np.array([ 0.00, 41.59,  0.00]),
-                 'FP8':  np.array([41.63, 41.59,  0.00])}
+                 'BF16': np.array([41.63, 41.59, 42.06]),
+                 'FP8':  np.array([41.63, 41.59, 66.69])}
 
 large_refresh = {'FP16': np.array([66.97, 66.98, 66.53]),
-                 'BF16': np.array([ 0.26, 41.84, 66.53]),
-                 'FP8':  np.array([41.89, 41.84, 66.53])}
+                 'BF16': np.array([41.89, 41.84, 41.74]),
+                 'FP8':  np.array([41.89, 41.84, 66.50])}
 
 
 # -- Colors & style ------------------------------------------------------------
@@ -128,10 +128,11 @@ def save_fig(total, refresh, out_path):
     all_vals = np.concatenate([v for d in [total, refresh] for v in d.values()])
     fig, ax = plt.subplots(figsize=(4.5, 3.2))
     draw_subfigure(ax, total, refresh)
-    ax.set_ylim(all_vals.min() - 5, all_vals.max() * 1.38)
-    fig.legend(handles=make_legend(), loc='lower center', ncol=3, frameon=False,
-               bbox_to_anchor=(0.5, -0.02))
-    fig.tight_layout(pad=0.8, rect=[0, 0.20, 1, 1])
+    ax.set_ylim(0, all_vals.max() * 1.38)
+    ax.legend(handles=make_legend(), loc='upper left', ncol=2, frameon=True,
+              framealpha=0.85, edgecolor='#cccccc', fontsize=8,
+              borderpad=0.5, labelspacing=0.3, handlelength=1.2, handletextpad=0.4)
+    fig.tight_layout(pad=0.8)
     fig.savefig(out_path, bbox_inches='tight')
     plt.close(fig)
     print(f'Saved {out_path}')

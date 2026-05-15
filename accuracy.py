@@ -10,7 +10,8 @@ warnings.filterwarnings('ignore')
 import os
 
 plt.rcParams.update({
-    'font.family': 'DejaVu Sans Mono',
+    'font.family':       ['Liberation Sans Narrow', 'Arial Narrow', 'DejaVu Sans'],
+    'font.weight':       'bold',
     'font.size': 12,
     'axes.titlesize': 12,
     'axes.labelsize': 12,

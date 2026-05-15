@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Grouped bar chart: DRAM throughput improvement (normalized speedup) over baseline.
-Two subfigures: large-scale config (left) and edge-device config (right).
-Each subfigure shows 3 DNN workloads x 3 precisions (fp16, bf16, fp8).
+Two suBFigures: large-scale config (left) and edge-device config (right).
+Each suBFigure shows 3 DNN workloads x 3 precisions (FP16, BF16, FP8).
 """
 
 import numpy as np
@@ -18,16 +18,16 @@ os.makedirs('outputs', exist_ok=True)
 
 # ── Data  (baseline_cycles / config_cycles) ── placeholder ───────────────────
 # Large-scale config
-large_dnns   = ['LLaMA', 'OPT', 'ResNet']
-large_fp16   = np.array([1.1409, 1.1412, 1.1372])
-large_bf16   = np.array([1.0, 1.077, 1.0])
-large_fp8    = np.array([1.0772, 1.0774, 1.0])
+large_dnns   = ['Llama', 'OPT', 'Resnet']
+large_FP16   = np.array([1.1409, 1.1412, 1.1372])
+large_BF16   = np.array([1.0772, 1.0774, 1.0831])
+large_FP8    = np.array([1.0772, 1.0774, 1.1371])
 
 # Edge-device config
-edge_dnns    = ['LLaMA', 'OPT', 'ResNet']
-edge_fp16    = np.array([1.1391, 1.1385, 1.1387])
-edge_bf16    = np.array([1.0, 1.0750, 1.0])
-edge_fp8     = np.array([1.0756, 1.0750, 1.0])
+edge_dnns    = ['Llama', 'OPT', 'Resnet']
+edge_FP16    = np.array([1.1391, 1.1385, 1.1387])
+edge_BF16    = np.array([1.0756, 1.0750, 1.0837])
+edge_FP8     = np.array([1.0756, 1.0750, 1.1384])
 
 
 # ── Colours & style ──────────────────────────────────────────────────────────
@@ -37,7 +37,8 @@ COLOR_FP8   = '#2D1040'
 
 
 plt.rcParams.update({
-    'font.family'       : 'DejaVu Sans Mono',
+    'font.family'       : ['Liberation Sans Narrow', 'DejaVu Sans'],
+    'font.weight'       : 'bold',
     'font.size'         : 11,
     'axes.titlesize'    : 11,
     'axes.labelsize'    : 11,
@@ -56,14 +57,14 @@ plt.rcParams.update({
 
 
 # ── Helper ────────────────────────────────────────────────────────────────────
-def draw_subfigure(ax, dnns, fp16, bf16, fp8):
+def draw_suBFigure(ax, dnns, FP16, BF16, FP8):
     n      = len(dnns)
     x      = np.arange(n)
     width  = 0.22
     offsets = [-width, 0, width]
-    precisions = [('fp16', fp16, COLOR_FP16),
-                  ('bf16', bf16, COLOR_BF16),
-                  ('fp8',  fp8,  COLOR_FP8 )]
+    precisions = [('FP16', FP16, COLOR_FP16),
+                  ('BF16', BF16, COLOR_BF16),
+                  ('FP8',  FP8,  COLOR_FP8 )]
 
     for offset, (label, values, color) in zip(offsets, precisions):
         for i, v in enumerate(values):
@@ -75,7 +76,7 @@ def draw_subfigure(ax, dnns, fp16, bf16, fp8):
     for offset, (_, values, _) in zip(offsets, precisions):
         for i, v in enumerate(values):
             ax.text(x[i] + offset, v + 0.003,
-                    f'{v:.2f}x',
+                    f'{v:.3f}x',
                     ha='center', va='bottom',
                     fontsize=11, rotation=90, zorder=4)
 
@@ -89,7 +90,7 @@ def draw_subfigure(ax, dnns, fp16, bf16, fp8):
     ax.set_xlim(-0.55, n - 0.45)
 
     ymin = 0.95
-    ymax = max(fp16.max(), bf16.max(), fp8.max()) * 1.10
+    ymax = max(FP16.max(), BF16.max(), FP8.max()) * 1.10
     ax.set_ylim(ymin, ymax)
 
     ax.spines['top'].set_visible(False)
@@ -100,15 +101,15 @@ def draw_subfigure(ax, dnns, fp16, bf16, fp8):
 
 def legend_patches():
     return [
-        plt.Rectangle((0,0), 1, 1, color=COLOR_FP16, label='fp16'),
-        plt.Rectangle((0,0), 1, 1, color=COLOR_BF16, label='bf16'),
-        plt.Rectangle((0,0), 1, 1, color=COLOR_FP8,  label='fp8'),
+        plt.Rectangle((0,0), 1, 1, color=COLOR_FP16, label='FP16'),
+        plt.Rectangle((0,0), 1, 1, color=COLOR_BF16, label='BF16'),
+        plt.Rectangle((0,0), 1, 1, color=COLOR_FP8,  label='FP8'),
     ]
 
 
 # ── Large-scale figure ────────────────────────────────────────────────────────
 fig1, ax1 = plt.subplots(figsize=(3.6, 2.6))
-draw_subfigure(ax1, large_dnns, large_fp16, large_bf16, large_fp8)
+draw_suBFigure(ax1, large_dnns, large_FP16, large_BF16, large_FP8)
 
 fig1.legend(handles=legend_patches(), loc='lower center',
             ncol=4, frameon=False, bbox_to_anchor=(0.5, -0.06))
@@ -118,7 +119,7 @@ plt.close(fig1)
 
 # ── Edge-device figure ────────────────────────────────────────────────────────
 fig2, ax2 = plt.subplots(figsize=(3.6, 2.6))
-draw_subfigure(ax2, edge_dnns, edge_fp16, edge_bf16, edge_fp8)
+draw_suBFigure(ax2, edge_dnns, edge_FP16, edge_BF16, edge_FP8)
 fig2.legend(handles=legend_patches(), loc='lower center',
             ncol=4, frameon=False, bbox_to_anchor=(0.5, -0.06))
 fig2.tight_layout(pad=0.5, rect=[0, 0.08, 1, 1])

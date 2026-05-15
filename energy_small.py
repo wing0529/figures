@@ -17,7 +17,7 @@ os.makedirs('outputs', exist_ok=True)
 
 
 # ── Data ──────────────────────────────────────────────────────────────────────
-DNNS       = ['LLaMA', 'OPT', 'ResNet']
+DNNS       = ['Llama', 'OPT', 'Resnet']
 PRECISIONS = ['fp16', 'bf16', 'fp8']
 
 total   = {'fp16': np.array([16.97, 15.94, 18.44]),
