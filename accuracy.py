@@ -63,12 +63,35 @@ resnet_fp16 = np.array([
 ])
 resnet_trefw_labels = ['x16', 'x32', 'x64', 'x128']  # x100 removed
 
-# BF16 dummy data (copied from FP16)
-Llama_bf16               = Llama_fp16.copy()
-opt_bf16                 = opt_fp16.copy()
-resnet_bf16              = resnet_fp16.copy()
+# Llama BF16 (E8M7) PPL % delta — baseline PPL = 12.894
+# cols: n=16→7 (high→low), rows: x16(512ms)→x128(4096ms)
+Llama_bf16 = np.array([
+    [0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02],  # x16 (512ms)
+    [NAN,  NAN,  4.00, 3.98, 3.99, 3.95, 0.41, 0.02, 0.02, 0.02],  # x32 (1024ms)
+    [NAN,  NAN,  INF,  INF,  INF,  INF,  5.94, 0.12, 0.02, 0.02],  # x64 (2048ms)
+    [NAN,  NAN,  INF,  INF,  INF,  INF,  104.8, 1.02, 0.14, 0.02], # x128 (4096ms)
+])
+
+# ResNet BF16 (E8M7) Top-5 accuracy % delta — baseline acc = 0.961
+# cols: n=16→7 (high→low), rows: x16(512ms)→x128(4096ms)
+resnet_bf16 = np.array([
+    [-0.83, -0.83, -0.83, -0.83, -0.83, -0.83, -0.83, -0.83, -0.83, -0.83],  # x16 (512ms)
+    [-100.0, -100.0, -0.83, -0.83, -0.83, -0.83, -0.83, -0.83, -0.83, -0.83],  # x32 (1024ms)
+    [-100.0, -100.0, -0.83, -0.83, -2.39, -1.66, -0.83, -0.83, -0.83, -0.83],  # x64 (2048ms)
+    [-100.0, -100.0, -4.06, -4.06, -3.23, -2.39, -2.39, -1.66, -1.66, -0.62],  # x128 (4096ms)
+])
 bf16_trefw_labels        = trefw_labels
 resnet_bf16_trefw_labels = resnet_trefw_labels
+
+# OPT BF16 (E8M7) PPL % delta — baseline PPL = 14.384
+# cols: n=16→7 (high→low), rows: x16→x128
+# Large PPL values (63125, 5.53e6, 1159, 27867) treated as INF
+opt_bf16 = np.array([
+    [NAN,  NAN,  0.03, 0.01, 0.02, 0.02, 0.01, 0.01, 0.01,0.01],  # x16
+    [NAN,  NAN,  0.03, 0.01, 0.02, 0.01, 0.01, 0.01, 0.01,0.01],  # x32
+    [NAN,  NAN,  INF,  INF,  INF,  INF,  196.7, 0.29, 0.10,0.01],  # x64  (tREFW=3600ms)
+    [NAN,  NAN,  INF,  INF,  INF,  INF, INF,1.43, 0.05, 0.00],  # x128
+])
 
 # Column-flipped variants for reversed (low→high) FP16/BF16 x-axis
 Llama_fp16_r  = np.fliplr(Llama_fp16)
@@ -99,12 +122,13 @@ opt_fp8 = np.array([
     [NAN,  NAN,  INF,  182., 0.40, 0.10, 0.00, 0.00],  # x128
 ])
 
-# ResNet-50 FP8 Top-5 accuracy % delta  (baseline acc = 0.9375)
-resnet_fp8 = np.array([  # x8
-    [   0.05,   0.05,  0.05,   0.05,  0.05,  0.05,  0.05,  0.05],  # x8
-    [   0.80,-100.0, -100.0,   0.05,  0.05,  0.05,  0.05,  0.05],  # x32
-    [  -0.80,-100.0, -100.0,   0.05,  0.05,  0.05,  0.05,  0.05],  # x64
-    [-100.0, -100.0, -100.0,  -0.80,  0.80,  0.05,  0.05,  0.05],  # x128
+# ResNet-50 FP8 Top-5 accuracy % delta — baseline acc = 94.5% (lpddr5, Vendor-A)
+# cols: n=8→1 (high→low), rows: x16(512ms)→x128(4096ms)
+resnet_fp8 = np.array([
+    [ -0.8,  -0.8,  -0.8,  -0.8,  -0.8,  -0.8,  -0.8,  -0.8],  # x16 (512ms)
+    [-100.0, -100.0, -0.8,  -0.8,  -0.8,  -0.8,  -0.8,  -0.8],  # x32 (1024ms)
+    [-100.0, -100.0, -0.8,  -0.8,   0.0,  -0.8,  -0.8,  -0.8],  # x64 (2048ms)
+    [-100.0, -100.0, -100.0, -100.0, -100.0, -100.0, -82.6, -0.8],  # x128 (4096ms)
 ])
 
 # Color scheme
@@ -344,7 +368,7 @@ def plot_heatmap(data, trefw_labels, n_bits_labels, title,
     _draw_heatmap_cells(ax, data, trefw_labels, n_bits_labels,
                         color_fn, format_fn, threshold, mantissa_bits, selected)
     ax.set_xlabel('# bits with reduced refresh (from LSB)', color='black', fontsize=13, fontweight='bold', labelpad=4)
-    ax.set_ylabel('tREFI multiplier', color='black', fontsize=13, fontweight='bold', labelpad=4)
+    ax.set_ylabel('tREFW multiplier', color='black', fontsize=13, fontweight='bold', labelpad=4)
 
     is_ppl = (color_fn is cell_color_ppl)
     sm, cb_ticks, cb_tlbls, cb_label = _make_colorbar_sm(threshold, is_ppl)
@@ -366,7 +390,7 @@ plot_heatmap(
     color_fn=cell_color_ppl, format_fn=format_val_ppl,
     threshold=1.0,
     filename=os.path.join(OUT, 'heatmap_Llama_fp16.pdf'),
-    selected=[('x32', 10)],
+    selected=[('x128', 10)],
     mantissa_bits=10,
 )
 
@@ -396,7 +420,7 @@ plot_heatmap(
     color_fn=cell_color_ppl, format_fn=format_val_ppl,
     threshold=1.0,
     filename=os.path.join(OUT, 'heatmap_Llama_bf16.pdf'),
-    selected=[('x32', 7)],
+    selected=[('x128', 7)],
     mantissa_bits=7,
 )
 
@@ -426,7 +450,7 @@ plot_heatmap(
     color_fn=cell_color_ppl, format_fn=format_val_ppl,
     threshold=1.0,
     filename=os.path.join(OUT, 'heatmap_Llama_fp8.pdf'),
-    selected=[('x64', 3)],
+    selected=[('x128', 3)],
     mantissa_bits=3,
 )
 
@@ -436,7 +460,7 @@ plot_heatmap(
     color_fn=cell_color_ppl, format_fn=format_val_ppl,
     threshold=1.0,
     filename=os.path.join(OUT, 'heatmap_opt_fp8.pdf'),
-    selected=[('x32', 3)],
+    selected=[('x128', 3)],
     mantissa_bits=3,
 )
 
@@ -446,7 +470,7 @@ plot_heatmap(
     color_fn=cell_color_acc, format_fn=format_val_acc,
     threshold=1.0,
     filename=os.path.join(OUT, 'heatmap_Resnet_fp8.pdf'),
-    selected=[('x128', 3)],
+    selected=[('x64', 3)],
     mantissa_bits=3,
 )
 
@@ -525,7 +549,7 @@ def _build_figure(row_specs, outfile):
             else:
                 ax.set_xticklabels([])
             if pc == 0:
-                ax.set_ylabel('tREFI multiplier', color='black', fontsize=13, fontweight='bold', labelpad=3)
+                ax.set_ylabel('tREFW multiplier', color='black', fontsize=13, fontweight='bold', labelpad=3)
             else:
                 ax.set_yticklabels([])
 
@@ -597,12 +621,12 @@ fig_ppl.patch.set_facecolor('white')
 
 ppl_panels = [
     # (group_x_list, w, h, data, trefw_lbls, col_lbls, mb, sel, show_yticks)
-    (llx, 0, ppl_fp16_w, ppl_fp16_h, Llama_fp16, trefw_labels,      n_bits_labels,     10, [('x32',  10)], True),
-    (llx, 1, ppl_fp16_w, ppl_fp16_h, Llama_bf16, bf16_trefw_labels,  n_bits_labels,      7, [('x32',   7)], False),
-    (llx, 2, ppl_fp8_w,  ppl_fp8_h,  Llama_fp8,  fp8_trefw_labels,   fp8_n_bits_labels,  3, [('x64',   3)], False),
+    (llx, 0, ppl_fp16_w, ppl_fp16_h, Llama_fp16, trefw_labels,      n_bits_labels,     10, [('x128',  10)], True),
+    (llx, 1, ppl_fp16_w, ppl_fp16_h, Llama_bf16, bf16_trefw_labels,  n_bits_labels,      7, [('x128',   7)], False),
+    (llx, 2, ppl_fp8_w,  ppl_fp8_h,  Llama_fp8,  fp8_trefw_labels,   fp8_n_bits_labels,  3, [('x128',   3)], False),
     (olx, 0, ppl_fp16_w, ppl_fp16_h, opt_fp16,   trefw_labels,      n_bits_labels,     10, [('x128', 10)], False),
     (olx, 1, ppl_fp16_w, ppl_fp16_h, opt_bf16,   bf16_trefw_labels,  n_bits_labels,      7, [('x128',  7)], False),
-    (olx, 2, ppl_fp8_w,  ppl_fp8_h,  opt_fp8,    fp8_trefw_labels,   fp8_n_bits_labels,  3, [('x32',   3)], False),
+    (olx, 2, ppl_fp8_w,  ppl_fp8_h,  opt_fp8,    fp8_trefw_labels,   fp8_n_bits_labels,  3, [('x128',   3)], False),
 ]
 
 for (gx, ci, pw, ph, data, trefw_lbls, col_lbls, mb, sel, show_y) in ppl_panels:
@@ -614,7 +638,7 @@ for (gx, ci, pw, ph, data, trefw_lbls, col_lbls, mb, sel, show_y) in ppl_panels:
                         show_bit_sections=True)
     ax.set_xlabel('# bits (from LSB)', color='black', fontsize=13, fontweight='bold', labelpad=3)
     if show_y:
-        ax.set_ylabel('tREFI multiplier', color='black', fontsize=13, fontweight='bold', labelpad=3)
+        ax.set_ylabel('tREFW multiplier', color='black', fontsize=13, fontweight='bold', labelpad=3)
     else:
         ax.set_yticklabels([])
 
@@ -653,7 +677,7 @@ _build_figure(
             panels=[
                 (0, resnet_fp16, resnet_trefw_labels,       n_bits_labels,     cell_color_acc, format_val_acc, 1.0, 10, [('x128', 10)]),
                 (1, resnet_bf16, resnet_bf16_trefw_labels,  n_bits_labels,     cell_color_acc, format_val_acc, 1.0,  7, [('x128',  7)]),
-                (2, resnet_fp8,  fp8_trefw_labels,          fp8_n_bits_labels, cell_color_acc, format_val_acc, 1.0,  3, [('x128',  3)]),
+                (2, resnet_fp8,  fp8_trefw_labels,          fp8_n_bits_labels, cell_color_acc, format_val_acc, 1.0,  3, [('x64',  3)]),
             ],
             height=resnet_h, title='Resnet', is_ppl=False, bottom_labels=True, show_nan_band=False,
         ),

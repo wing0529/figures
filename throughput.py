@@ -19,15 +19,15 @@ os.makedirs('outputs', exist_ok=True)
 # ── Data  (baseline_cycles / config_cycles) ── placeholder ───────────────────
 # Large-scale config
 large_dnns   = ['LLaMA', 'OPT', 'ResNet']
-large_fp16   = np.array([1.1381, 1.0, 1.0])
-large_bf16   = np.array([1.1109, 1.0, 1.0])
-large_fp8    = np.array([1.0813, 1.0, 1.0])
+large_fp16   = np.array([1.1409, 1.1412, 1.1372])
+large_bf16   = np.array([1.0, 1.077, 1.0])
+large_fp8    = np.array([1.0772, 1.0774, 1.0])
 
 # Edge-device config
 edge_dnns    = ['LLaMA', 'OPT', 'ResNet']
-edge_fp16    = np.array([1.1358, 1.0, 1.0])
-edge_bf16    = np.array([1.1088, 1.0, 1.0])
-edge_fp8     = np.array([1.0791, 1.0, 1.0])
+edge_fp16    = np.array([1.1391, 1.1385, 1.1387])
+edge_bf16    = np.array([1.0, 1.0750, 1.0])
+edge_fp8     = np.array([1.0756, 1.0750, 1.0])
 
 
 # ── Colours & style ──────────────────────────────────────────────────────────
