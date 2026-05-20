@@ -11,14 +11,24 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import os
+import matplotlib.font_manager as fm
+from pathlib import Path
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
 os.makedirs('outputs', exist_ok=True)
 
 
+
+FIGURE_DIR  = Path(__file__).resolve().parent
+_FONT_PATH = '/home/wing02/arialnarrow_bold.ttf'
+if Path(_FONT_PATH).exists():
+    fm.fontManager.addfont(_FONT_PATH)
+    _FONT_NAME = fm.FontProperties(fname=_FONT_PATH).get_name()
+
+
 # -- Data ----------------------------------------------------------------------
-DNNS       = ['Llama', 'OPT', 'Resnet']
+DNNS       = ['Llama 3.2-1B', 'OPT-2.7B', 'Resnet50']
 PRECISIONS = ['FP16', 'BF16', 'FP8']
 
 small_total   = {'FP16': np.array([16.97, 15.94, 18.44]),
@@ -42,7 +52,7 @@ large_refresh = {'FP16': np.array([66.97, 66.98, 66.53]),
 COLORS = {'FP16': '#D94A64', 'BF16': '#8C1F6F', 'FP8': '#2D1040'}
 
 plt.rcParams.update({
-    'font.family':       ['Liberation Sans Narrow', 'Arial Narrow', 'DejaVu Sans'],
+    'font.family':       _FONT_NAME, 
     'font.weight':       'bold',
     'font.size':         11,
     'axes.titlesize':    11,
@@ -92,14 +102,14 @@ def draw_subfigure(ax, total, refresh):
             lbl_y = tv + 0.8 if tv >= 0 else tv - 0.8
             va    = 'bottom' if tv >= 0 else 'top'
             ax.text(tot_x, lbl_y, f'{tv:.1f}',
-                    ha='center', va=va, fontsize=6, rotation=90, zorder=4)
+                    ha='center', va=va, fontsize=11, rotation=90, zorder=4)
 
             # Refresh -- hatched
-            ax.bar(ref_x, rv, BW,
-                   facecolor='white', hatch='///', edgecolor=COLORS[prec],
+            ax.bar(ref_x, rv, 0.1,
+                   facecolor='white', hatch='////', edgecolor=COLORS[prec],
                    linewidth=0.8, zorder=3)
-            ax.text(ref_x, rv + 0.8, f'{rv:.1f}',
-                    ha='center', va='bottom', fontsize=6, rotation=90, zorder=4)
+            ax.text(ref_x, rv + 0.9, f'{rv:.1f}',
+                    ha='center', va='bottom', fontsize=11, rotation=90, zorder=4)
 
     ax.axhline(0, color='#555555', linewidth=0.8, linestyle='--', zorder=2)
     ax.set_xticks(x)
@@ -137,7 +147,43 @@ def save_fig(total, refresh, out_path):
     plt.close(fig)
     print(f'Saved {out_path}')
 
+def save_combined_fig(small_total, small_refresh, large_total, large_refresh, out_path):
+    all_vals = np.concatenate([
+        v for d in [small_total, small_refresh, large_total, large_refresh]
+        for v in d.values()
+    ])
+    ymax = all_vals.max() * 1.38
+
+    fig, (ax_l, ax_r) = plt.subplots(1, 2, figsize=(8.0, 2), sharey=True)
+
+    draw_subfigure(ax_r, small_total, small_refresh)
+    draw_subfigure(ax_l, large_total, large_refresh)
+
+    ax_l.set_title('Datacenter-scale', fontweight='bold')
+    ax_r.set_title('Edge-device', fontweight='bold')
+    ax_r.set_ylabel('')   # sharey라 중복 제거
+
+    ax_l.set_ylim(0, ymax)
+
+
+    fig.legend(handles=make_legend(), loc='lower center',
+               ncol=6, frameon=False,
+               bbox_to_anchor=(0.5, -0.02))
+    fig.tight_layout(pad=0.8, rect=[0, 0.08, 1, 1])
+    fig.savefig(out_path, bbox_inches='tight')
+
+    plt.close(fig)
+    print(f'Saved {out_path}')
+
+
+# -- Generate combined figure --------------------------------------------------
+save_combined_fig(small_total, small_refresh,
+                  large_total, large_refresh,
+                  'outputs/energy_saving_combined.pdf')
+
 
 # -- Generate both figures -----------------------------------------------------
 save_fig(small_total, small_refresh, 'outputs/energy_saving_small.pdf')
 save_fig(large_total, large_refresh, 'outputs/energy_saving_large.pdf')
+
+

@@ -41,8 +41,12 @@ NAN = 999
 INF = 998
 
 trefw_labels = [ 'x16', 'x32', 'x64', 'x128']  # x100 removed
-n_bits_labels     = list(range(16, 6, -1))  # [16,15,14,13,12,11,10,9,8,7] high→low
-n_bits_labels_rev = list(range(7,  17))      # [7,8,...,16] low→high for FP16/BF16
+# n_bits_labels     = list(range(16, 6, -1))  # [16,15,14,13,12,11,10,9,8,7] high→low
+# n_bits_labels_rev = list(range(7,  17))      # [7,8,...,16] low→high for FP16/BF16
+
+n_bits_labels    = list(range(15, 5, -1))
+n_bits_labels_rev = list(range(6, 16, 1))
+
 
 # Llama FP16 PPL % delta — columns: n=16 (bit 15) → n=7 (bits 6-0), rows: x8→x128
 Llama_fp16 = np.array([  # x8
@@ -81,12 +85,23 @@ Llama_bf16 = np.array([
 
 # ResNet BF16 (E8M7) Top-5 accuracy % delta — baseline acc = 0.961
 # cols: n=16→7 (high→low), rows: x16(512ms)→x128(4096ms)
+# resnet_bf16 = np.array([
+#     [-0.83, -0.83, -0.83, -0.83, -0.83, -0.83, -0.83, -0.83, -0.83, -0.83],  # x16 (512ms)
+#     [-100.0, -100.0, -0.83, -0.83, -0.83, -0.83, -0.83, -0.83, -0.83, -0.83],  # x32 (1024ms)
+#     [-100.0, -100.0, -0.83, -0.83, -2.39, -1.66, -0.83, -0.83, -0.83, -0.83],  # x64 (2048ms)
+#     [-100.0, -100.0, -4.06, -4.06, -3.23, -2.39, -2.39, -1.66, -1.66, -0.62],  # x128 (4096ms)
+# ])
+
+# ResNet BF16 (E8M7) Top-5 accuracy % delta — baseline acc = 0.953
+# cols: bit15→bit6 (high→low), rows: x16(512ms)→x128(4096ms)
 resnet_bf16 = np.array([
-    [-0.83, -0.83, -0.83, -0.83, -0.83, -0.83, -0.83, -0.83, -0.83, -0.83],  # x16 (512ms)
-    [-100.0, -100.0, -0.83, -0.83, -0.83, -0.83, -0.83, -0.83, -0.83, -0.83],  # x32 (1024ms)
-    [-100.0, -100.0, -0.83, -0.83, -2.39, -1.66, -0.83, -0.83, -0.83, -0.83],  # x64 (2048ms)
-    [-100.0, -100.0, -4.06, -4.06, -3.23, -2.39, -2.39, -1.66, -1.66, -0.62],  # x128 (4096ms)
+    # bit: 15      14      13      12      11      10      9       8       7       6
+    [  0.00,   0.00,   0.00,   0.00,   0.00,   0.00,   0.00,   0.00,   0.00,   0.00],  # x16  (512ms)
+    [-100.0, -100.0,   0.00,   0.00,   0.00,   0.00,   0.00,   0.00,   0.00,   0.00],  # x32  (1024ms)
+    [-100.0, -100.0,  -0.84,   0.00,   0.00,  -0.84,   0.00,   0.00,   0.00,   0.00],  # x64  (2048ms)
+    [-100.0, -100.0,  -1.57,  -1.57,  -0.84,   0.00,   0.00,  -0.84,   0.00,   0.00],  # x128 (4096ms)
 ])
+
 bf16_trefw_labels        = trefw_labels
 resnet_bf16_trefw_labels = resnet_trefw_labels
 
@@ -111,7 +126,8 @@ resnet_bf16_r = np.fliplr(resnet_bf16)
 # FP8 E4M3 datasets (% delta from baseline, NaN=999 for not measured)
 # x-axis: n lower bits reduced, 8->1 (left to right)
 fp8_trefw_labels  = ['x16','x32', 'x64', 'x128']  # x100 removed
-fp8_n_bits_labels = [8, 7, 6, 5, 4, 3, 2, 1]
+#fp8_n_bits_labels = [8, 7, 6, 5, 4, 3, 2, 1]
+fp8_n_bits_labels = [7, 6, 5, 4, 3, 2, 1, 0]
 
 # Llama FP8 PPL % delta  (cols: n=8→1 high-to-low, rows: x8→x128)
 Llama_fp8 = np.array([
@@ -144,6 +160,11 @@ _GREEN_FILL = '#4a7c52'   # muted forest green
 _GREEN_TEXT = '#ffffff'
 _NA_FILL    = '#2d2d2d'   # near-black charcoal (INF / NaN)
 _NA_TEXT    = '#ffffff'
+
+_GREEN_FILL = '#5E8F61'
+_GREEN_TEXT = '#ffffff'
+_NA_FILL = '#2d2d2d'
+_NA_TEXT = '#ffffff'
 
 # unsaturated: warm amber -> muted red -> dark crimson
 _BAD_CMAP = LinearSegmentedColormap.from_list(
@@ -212,14 +233,14 @@ def _draw_heatmap_cells(ax, data, trefw_labels, n_bits_labels,
             lbl = format_fn(val)
             ax.text(
                 c * cell_in + cell_in / 2,
-                r * cell_in + cell_in * 0.18,
+                r * cell_in + cell_in * 0.08,
                 lbl,
                 ha='center', va='center',
                 fontsize=9, fontweight='bold', color=tc, zorder=2,
             )
             ax.plot(
             c * cell_in + cell_in / 2,
-            r * cell_in + cell_in * 0.68,
+            r * cell_in + cell_in * 0.72,
             marker='*',
             markersize=18,          # 크기 조절
             color='#FFD700',        # 골드
@@ -302,7 +323,7 @@ def _draw_heatmap_cells(ax, data, trefw_labels, n_bits_labels,
 
 
 def _make_colorbar_sm(threshold, is_ppl, show_nan_band=True,
-                      green_frac=0.125, nan_frac=0.15):
+                      green_frac=0.125, nan_frac=0.25):
     """Build a ScalarMappable using fixed visual fractions (0–1 norm).
     green_frac  – fraction of bar height dedicated to the safe (green) zone
     nan_frac    – fraction dedicated to NaN/INF band (only when show_nan_band)
@@ -360,7 +381,7 @@ def plot_heatmap(data, trefw_labels, n_bits_labels, title,
     top_in    = 0.10
     bot_in    = 0.65
     cbar_w    = 0.12
-    cbar_gap  = 0.08
+    cbar_gap  = 0.01
     cbar_rpad = 0.55
 
     axes_w = ncols * cell_in
@@ -396,7 +417,7 @@ def plot_heatmap(data, trefw_labels, n_bits_labels, title,
     cbar.outline.set_visible(False)
     cbar.set_label(cb_label, fontsize=11, labelpad=3)
 
-    plt.savefig(filename, bbox_inches='tight', transparent=False)
+    plt.savefig(filename, bbox_inches='tight', transparent=False,dpi=600)
     plt.close()
     print(f'Saved {filename}')
 
@@ -407,8 +428,8 @@ plot_heatmap(
     color_fn=cell_color_ppl, format_fn=format_val_ppl,
     threshold=1.0,
     filename=os.path.join(OUT, 'heatmap_Llama_fp16.pdf'),
-    selected=[('x128', 10)],
-    mantissa_bits=10,
+    selected=[('x128', 9)],
+    mantissa_bits=9,
 )
 
 plot_heatmap(
@@ -417,8 +438,8 @@ plot_heatmap(
     color_fn=cell_color_ppl, format_fn=format_val_ppl,
     threshold=1.0,
     filename=os.path.join(OUT, 'heatmap_opt_fp16.pdf'),
-    selected=[('x128', 10)],
-    mantissa_bits=10,
+    selected=[('x128', 9)],
+    mantissa_bits=9,
 )
 
 plot_heatmap(
@@ -427,8 +448,8 @@ plot_heatmap(
     color_fn=cell_color_acc, format_fn=format_val_acc,
     threshold=1.0,
     filename=os.path.join(OUT, 'heatmap_Resnet_fp16.pdf'),
-    selected=[('x128', 10)],
-    mantissa_bits=10,
+    selected=[('x128', 9)],
+    mantissa_bits=9,
 )
 
 plot_heatmap(
@@ -437,8 +458,8 @@ plot_heatmap(
     color_fn=cell_color_ppl, format_fn=format_val_ppl,
     threshold=1.0,
     filename=os.path.join(OUT, 'heatmap_Llama_bf16.pdf'),
-    selected=[('x128', 7)],
-    mantissa_bits=7,
+    selected=[('x128', 6)],
+    mantissa_bits=6,
 )
 
 plot_heatmap(
@@ -447,8 +468,8 @@ plot_heatmap(
     color_fn=cell_color_ppl, format_fn=format_val_ppl,
     threshold=1.0,
     filename=os.path.join(OUT, 'heatmap_opt_bf16.pdf'),
-    selected=[('x128', 7)],
-    mantissa_bits=7,
+    selected=[('x128', 6)],
+    mantissa_bits=6,
 )
 
 plot_heatmap(
@@ -457,8 +478,8 @@ plot_heatmap(
     color_fn=cell_color_acc, format_fn=format_val_acc,
     threshold=1.0,
     filename=os.path.join(OUT, 'heatmap_Resnet_bf16.pdf'),
-    selected=[('x128', 7)],
-    mantissa_bits=7,
+    selected=[('x128', 6)],
+    mantissa_bits=6,
 )
 
 plot_heatmap(
@@ -467,8 +488,8 @@ plot_heatmap(
     color_fn=cell_color_ppl, format_fn=format_val_ppl,
     threshold=1.0,
     filename=os.path.join(OUT, 'heatmap_Llama_fp8.pdf'),
-    selected=[('x128', 3)],
-    mantissa_bits=3,
+    selected=[('x128', 2)],
+    mantissa_bits=2,
 )
 
 plot_heatmap(
@@ -477,8 +498,8 @@ plot_heatmap(
     color_fn=cell_color_ppl, format_fn=format_val_ppl,
     threshold=1.0,
     filename=os.path.join(OUT, 'heatmap_opt_fp8.pdf'),
-    selected=[('x128', 3)],
-    mantissa_bits=3,
+    selected=[('x128', 2)],
+    mantissa_bits=2,
 )
 
 plot_heatmap(
@@ -487,8 +508,8 @@ plot_heatmap(
     color_fn=cell_color_acc, format_fn=format_val_acc,
     threshold=1.0,
     filename=os.path.join(OUT, 'heatmap_Resnet_fp8.pdf'),
-    selected=[('x64', 3)],
-    mantissa_bits=3,
+    selected=[('x64', 2)],
+    mantissa_bits=2,
 )
 
 print('Individual heatmaps done.')
@@ -498,8 +519,8 @@ fp16_w = len(n_bits_labels)     * CELL_IN   # 10 cols
 fp8_w  = len(fp8_n_bits_labels) * CELL_IN   #  8 cols
 col_widths = [fp16_w, fp16_w, fp8_w]
 
-left_m    = 0.85   # y-labels
-hgap      = 0.55   # gap between panels horizontally
+left_m    = 1.5   # y-labels
+hgap      = 0.2   # gap between panels horizontally
 vgap      = 0.70   # gap between rows
 bot_m     = 0.65   # bottom margin
 top_m     = 0.35   # top margin (col titles)
@@ -581,9 +602,12 @@ def _build_figure(row_specs, outfile):
                      ha='center', va='bottom', fontsize=16, fontweight='bold', color='black')
         else:
             y_center = (row_y[ri] + rs['height'] / 2) / fig_h
-            fig.text((left_m - 0.10) / fig_w, y_center, rs['title'],
-                     ha='right', va='center', fontsize=14, fontweight='bold',
-                     color='black', rotation=90)
+            fig.text((left_m - 0.75) / fig_w, y_center, rs['title'],
+            ha='center', va='center', fontsize=14, fontweight='bold',
+            color='black', rotation=90)
+            # fig.text((left_m - 0.10) / fig_w, y_center, rs['title'],
+            #          ha='right', va='center', fontsize=14, fontweight='bold',
+            #          color='black', rotation=90)
 
     # column titles above the top row (leave room for bit-section arrows ~0.22in)
     col_title_y = row_y[0] + row_heights[0] + 0.27
@@ -603,7 +627,7 @@ def _build_figure(row_specs, outfile):
 
 ppl_lm        = 0.85   # y-label space before each group
 ppl_hgap      = hgap
-ppl_model_gap = 0.85   # space between Llama group and OPT group
+ppl_model_gap = 0.25  # space between Llama group and OPT group
 ppl_cbar_gap  = cbar_gap
 ppl_cbar_w    = cbar_w
 ppl_cbar_rpad = cbar_rpad
@@ -636,14 +660,23 @@ ppl_fig_h  = ppl_top_m + ppl_row_h + ppl_bot_m
 fig_ppl = plt.figure(figsize=(ppl_fig_w, ppl_fig_h))
 fig_ppl.patch.set_facecolor('white')
 
+# ppl_panels = [
+#     # (group_x_list, w, h, data, trefw_lbls, col_lbls, mb, sel, show_yticks)
+#     (llx, 0, ppl_fp16_w, ppl_fp16_h, Llama_fp16, trefw_labels,      n_bits_labels,     10, [('x128',  10)], True),
+#     (llx, 1, ppl_fp16_w, ppl_fp16_h, Llama_bf16, bf16_trefw_labels,  n_bits_labels,      7, [('x128',   7)], False),
+#     (llx, 2, ppl_fp8_w,  ppl_fp8_h,  Llama_fp8,  fp8_trefw_labels,   fp8_n_bits_labels,  3, [('x128',   3)], False),
+#     (olx, 0, ppl_fp16_w, ppl_fp16_h, opt_fp16,   trefw_labels,      n_bits_labels,     10, [('x128', 10)], False),
+#     (olx, 1, ppl_fp16_w, ppl_fp16_h, opt_bf16,   bf16_trefw_labels,  n_bits_labels,      7, [('x128',  7)], False),
+#     (olx, 2, ppl_fp8_w,  ppl_fp8_h,  opt_fp8,    fp8_trefw_labels,   fp8_n_bits_labels,  3, [('x128',   3)], False),
+# ]
+
 ppl_panels = [
-    # (group_x_list, w, h, data, trefw_lbls, col_lbls, mb, sel, show_yticks)
-    (llx, 0, ppl_fp16_w, ppl_fp16_h, Llama_fp16, trefw_labels,      n_bits_labels,     10, [('x128',  10)], True),
-    (llx, 1, ppl_fp16_w, ppl_fp16_h, Llama_bf16, bf16_trefw_labels,  n_bits_labels,      7, [('x128',   7)], False),
-    (llx, 2, ppl_fp8_w,  ppl_fp8_h,  Llama_fp8,  fp8_trefw_labels,   fp8_n_bits_labels,  3, [('x128',   3)], False),
-    (olx, 0, ppl_fp16_w, ppl_fp16_h, opt_fp16,   trefw_labels,      n_bits_labels,     10, [('x128', 10)], False),
-    (olx, 1, ppl_fp16_w, ppl_fp16_h, opt_bf16,   bf16_trefw_labels,  n_bits_labels,      7, [('x128',  7)], False),
-    (olx, 2, ppl_fp8_w,  ppl_fp8_h,  opt_fp8,    fp8_trefw_labels,   fp8_n_bits_labels,  3, [('x128',   3)], False),
+    (llx, 0, ppl_fp16_w, ppl_fp16_h, Llama_fp16, trefw_labels,     n_bits_labels,      9, [('x128', 9)],  True),
+    (llx, 1, ppl_fp16_w, ppl_fp16_h, Llama_bf16, bf16_trefw_labels, n_bits_labels,      6, [('x128', 6)],  False),
+    (llx, 2, ppl_fp8_w,  ppl_fp8_h,  Llama_fp8,  fp8_trefw_labels,  fp8_n_bits_labels,  2, [('x128', 2)],  False),
+    (olx, 0, ppl_fp16_w, ppl_fp16_h, opt_fp16,   trefw_labels,     n_bits_labels,      9, [('x128', 9)],  False),
+    (olx, 1, ppl_fp16_w, ppl_fp16_h, opt_bf16,   bf16_trefw_labels, n_bits_labels,      6, [('x128', 6)],  False),
+    (olx, 2, ppl_fp8_w,  ppl_fp8_h,  opt_fp8,    fp8_trefw_labels,  fp8_n_bits_labels,  2, [('x128', 2)],  False),
 ]
 
 for (gx, ci, pw, ph, data, trefw_lbls, col_lbls, mb, sel, show_y) in ppl_panels:
@@ -688,6 +721,86 @@ print(f'Saved {out_ppl}')
 # ── Figure 2: Resnet (1 row) ───────────────────────────────────────────────
 resnet_h = len(resnet_trefw_labels) * CELL_IN   # 4 rows
 
+# _build_figure(
+#     row_specs=[
+#         dict(
+#             panels=[
+#                 (0, resnet_fp16, resnet_trefw_labels,       n_bits_labels,     cell_color_acc, format_val_acc, 1.0, 10, [('x128', 10)]),
+#                 (1, resnet_bf16, resnet_bf16_trefw_labels,  n_bits_labels,     cell_color_acc, format_val_acc, 1.0,  7, [('x128',  7)]),
+#                 (2, resnet_fp8,  fp8_trefw_labels,          fp8_n_bits_labels, cell_color_acc, format_val_acc, 1.0,  3, [('x64',  3)]),
+#             ],
+#             height=resnet_h, title='Resnet', is_ppl=False, bottom_labels=True, show_nan_band=False,
+#         ),
+#     ],
+#     outfile=os.path.join(OUT, 'accuracy_heatmap_acc.pdf'),
+# )
+
+_build_figure(
+    row_specs=[
+        dict(
+            panels=[
+                (0, Llama_fp16, trefw_labels,      n_bits_labels,      cell_color_ppl, format_val_ppl, 1.0, 9, [('x128', 9)]),
+                (1, Llama_bf16, bf16_trefw_labels,  n_bits_labels,     cell_color_ppl, format_val_ppl, 1.0,  6, [('x128',  6)]),
+                (2, Llama_fp8,  fp8_trefw_labels,   fp8_n_bits_labels, cell_color_ppl, format_val_ppl, 1.0,  2, [('x128',  2)]),
+            ],
+            height=len(trefw_labels) * CELL_IN,
+            title='Llama', is_ppl=True, bottom_labels=False,
+        ),
+        dict(
+            panels=[
+                (0, opt_fp16, trefw_labels,      n_bits_labels,      cell_color_ppl, format_val_ppl, 1.0, 9, [('x128', 9)]),
+                (1, opt_bf16, bf16_trefw_labels,  n_bits_labels,     cell_color_ppl, format_val_ppl, 1.0,  6, [('x128',  6)]),
+                (2, opt_fp8,  fp8_trefw_labels,   fp8_n_bits_labels, cell_color_ppl, format_val_ppl, 1.0,  2, [('x128',  2)]),
+            ],
+            height=len(trefw_labels) * CELL_IN,
+            title='OPT', is_ppl=True, bottom_labels=False,  # ← x축 레이블 중간행은 숨김
+        ),
+        
+    ],
+    outfile=os.path.join(OUT, 'accuracy_heatmap_1.pdf'),
+)
+
+_build_figure(
+    row_specs=[
+        dict(
+            panels=[
+                (0, Llama_fp16, trefw_labels,      n_bits_labels,      cell_color_ppl, format_val_ppl, 1.0, 9, [('x128', 9)]),
+                (1, Llama_bf16, bf16_trefw_labels,  n_bits_labels,     cell_color_ppl, format_val_ppl, 1.0,  6, [('x128',  6)]),
+                (2, Llama_fp8,  fp8_trefw_labels,   fp8_n_bits_labels, cell_color_ppl, format_val_ppl, 1.0,  2, [('x128',  2)]),
+            ],
+            height=len(trefw_labels) * CELL_IN,
+            title='Llama', is_ppl=True, bottom_labels=False,
+        ),
+        dict(
+            panels=[
+                (0, opt_fp16, trefw_labels,      n_bits_labels,      cell_color_ppl, format_val_ppl, 1.0, 9, [('x128', 9)]),
+                (1, opt_bf16, bf16_trefw_labels,  n_bits_labels,     cell_color_ppl, format_val_ppl, 1.0,  6, [('x128',  6)]),
+                (2, opt_fp8,  fp8_trefw_labels,   fp8_n_bits_labels, cell_color_ppl, format_val_ppl, 1.0,  2, [('x128',  2)]),
+            ],
+            height=len(trefw_labels) * CELL_IN,
+            title='OPT', is_ppl=True, bottom_labels=False,  # ← x축 레이블 중간행은 숨김
+        ),
+        dict(
+            panels=[
+                # ↓ cell_color_acc + format_val_acc 로 변경
+                (0, resnet_fp16, resnet_trefw_labels,      n_bits_labels,      cell_color_acc, format_val_acc, 1.0, 9, [('x128', 9)]),
+                (1, resnet_bf16, resnet_bf16_trefw_labels,  n_bits_labels,     cell_color_acc, format_val_acc, 1.0,  6, [('x128',  6)]),
+                (2, resnet_fp8,  fp8_trefw_labels,          fp8_n_bits_labels, cell_color_acc, format_val_acc, 1.0,  2, [('x64',   2)]),
+            ],
+            height=len(resnet_trefw_labels) * CELL_IN,
+            title='ResNet50',
+            is_ppl=False,          # ← False → 컬러바에 "Top-5 accuracy loss (%)" 표시
+            bottom_labels=True,
+            show_nan_band=False,   # ← ResNet은 NaN 없으므로 False
+        ),
+    ],
+    outfile=os.path.join(OUT, 'accuracy_heatmap_2.pdf'),
+)
+
+# --figure3--
+
+resnet_h = len(resnet_trefw_labels) * CELL_IN   # 4 rows
+
 _build_figure(
     row_specs=[
         dict(
@@ -699,7 +812,8 @@ _build_figure(
             height=resnet_h, title='Resnet', is_ppl=False, bottom_labels=True, show_nan_band=False,
         ),
     ],
-    outfile=os.path.join(OUT, 'accuracy_heatmap_acc.pdf'),
+    outfile=os.path.join(OUT, 'accuracy_heatmap_3.pdf'),
 )
+
 
 print('All done.')

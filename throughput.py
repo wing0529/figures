@@ -10,6 +10,8 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import os
+import matplotlib.font_manager as fm
+from pathlib import Path
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
@@ -18,26 +20,40 @@ os.makedirs('outputs', exist_ok=True)
 
 # ── Data  (baseline_cycles / config_cycles) ── placeholder ───────────────────
 # Large-scale config
-large_dnns   = ['Llama', 'OPT', 'Resnet']
+large_dnns   = ['Llama 3.2-1B', 'OPT-2.7B', 'Resnet50']
 large_FP16   = np.array([1.1409, 1.1412, 1.1372])
-large_BF16   = np.array([1.0772, 1.0774, 1.0831])
 large_FP8    = np.array([1.0772, 1.0774, 1.1371])
+large_BF16   = np.array([1.0772, 1.0774, 1.0831])
 
 # Edge-device config
-edge_dnns    = ['Llama', 'OPT', 'Resnet']
+edge_dnns    = ['Llama 3.2-1B', 'OPT-2.7B', 'Resnet50']
 edge_FP16    = np.array([1.1391, 1.1385, 1.1387])
-edge_BF16    = np.array([1.0756, 1.0750, 1.0837])
 edge_FP8     = np.array([1.0756, 1.0750, 1.1384])
+edge_BF16    = np.array([1.0756, 1.0750, 1.0837])
+
 
 
 # ── Colours & style ──────────────────────────────────────────────────────────
-COLOR_FP16  = '#D94A64'
-COLOR_BF16  = '#8C1F6F'
-COLOR_FP8   = '#2D1040'
+# COLOR_FP16  = '#D94A64'
+# COLOR_BF16  = '#8C1F6F'
+# COLOR_FP8   = '#2D1040'
+COLOR_FP16  = '#92658E'
+COLOR_BF16  = '#BE6C91'
+COLOR_FP8   = '#E4AFCF'
 
+COLOR_FP16 = '#3E2E5E' #(진한 다크 퍼플)
+COLOR_BF16 = '#71618B' #(미디엄 모브)
+COLOR_FP8 = '#BE6C91' #92658E' #(상단 (Layer 3))  
+
+
+FIGURE_DIR  = Path(__file__).resolve().parent
+_FONT_PATH = '/home/wing02/arialnarrow_bold.ttf'
+if Path(_FONT_PATH).exists():
+    fm.fontManager.addfont(_FONT_PATH)
+    _FONT_NAME = fm.FontProperties(fname=_FONT_PATH).get_name()
 
 plt.rcParams.update({
-    'font.family'       : ['Liberation Sans Narrow', 'DejaVu Sans'],
+    'font.family'       : _FONT_NAME, 
     'font.weight'       : 'bold',
     'font.size'         : 11,
     'axes.titlesize'    : 11,
@@ -69,7 +85,7 @@ def draw_suBFigure(ax, dnns, FP16, BF16, FP8):
     for offset, (label, values, color) in zip(offsets, precisions):
         for i, v in enumerate(values):
             ax.bar(x[i] + offset, v, width,
-                   color=color, edgecolor='white', linewidth=0.4, zorder=3)
+                   color=color, edgecolor='black', linewidth=0.8, zorder=3)
         ax.bar([], [], width, color=color, label=label, zorder=3)
 
     # Value labels above each bar
@@ -126,4 +142,23 @@ fig2.tight_layout(pad=0.5, rect=[0, 0.08, 1, 1])
 fig2.savefig('outputs/throughput_edge.pdf', bbox_inches='tight')
 plt.close(fig2)
 
-print('Saved outputs/throughput_large.pdf and outputs/throughput_edge.pdf')
+# ── Combined figure (large + edge side by side) ───────────────────────────────
+fig, (ax_l, ax_r) = plt.subplots(1, 2, figsize=(8,2), sharey=True)
+
+draw_suBFigure(ax_l, large_dnns, large_FP16, large_BF16, large_FP8)
+draw_suBFigure(ax_r, edge_dnns,  edge_FP16,  edge_BF16,  edge_FP8)
+
+ax_l.set_title('Datacenter-scale', fontweight='bold')
+ax_r.set_title('Edge-device', fontweight='bold')
+
+# sharey=True 쓰면 오른쪽 y축 label 중복되므로 제거
+ax_r.set_ylabel('')
+
+fig.legend(handles=legend_patches(), loc='lower center',
+           ncol=3, frameon=False, bbox_to_anchor=(0.5, -0.09))  # -0.06 → -0.02
+fig.tight_layout(pad=0.5, rect=[0, 0.04, 1, 1])                 # 0.08 → 0.05
+fig.savefig('outputs/throughput_combined.pdf', bbox_inches='tight')
+plt.close(fig)
+print('Saved outputs/throughput_combined.pdf')
+
+print('Saved outputs/throughput_large.pdf and outputs/throughput_edge.pdf and Saved outputs/throughput_combined.pdf')
