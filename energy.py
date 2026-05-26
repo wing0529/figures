@@ -154,22 +154,24 @@ def save_combined_fig(small_total, small_refresh, large_total, large_refresh, ou
     ])
     ymax = all_vals.max() * 1.38
 
-    fig, (ax_l, ax_r) = plt.subplots(1, 2, figsize=(8.0, 2), sharey=True)
+    fig, (ax_l, ax_r) = plt.subplots(1, 2, figsize=(8.0, 2.8), sharey=True,
+                                      gridspec_kw={'wspace': 0})
 
     draw_subfigure(ax_r, small_total, small_refresh)
     draw_subfigure(ax_l, large_total, large_refresh)
 
-    ax_l.set_title('Datacenter-scale', fontweight='bold')
-    ax_r.set_title('Edge-device', fontweight='bold')
-    ax_r.set_ylabel('')   # sharey라 중복 제거
+    ax_l.set_title(y=-0.28, label='Datacenter-scale', fontweight='bold')
+    ax_r.set_title(y=-0.28, label='Edge-device', fontweight='bold')
+    ax_r.set_ylabel('')
+    ax_r.spines['left'].set_visible(False)
 
     ax_l.set_ylim(0, ymax)
 
-
-    fig.legend(handles=make_legend(), loc='lower center',
+    fig.tight_layout(pad=0.8, rect=[0, 0.10, 1, 0.90])
+    fig.subplots_adjust(wspace=0)
+    fig.legend(handles=make_legend(), loc='upper center',
                ncol=6, frameon=False,
-               bbox_to_anchor=(0.5, -0.02))
-    fig.tight_layout(pad=0.8, rect=[0, 0.08, 1, 1])
+               bbox_to_anchor=(0.5, 0.99))
     fig.savefig(out_path, bbox_inches='tight')
 
     plt.close(fig)
@@ -183,7 +185,44 @@ save_combined_fig(small_total, small_refresh,
 
 
 # -- Generate both figures -----------------------------------------------------
-save_fig(small_total, small_refresh, 'outputs/energy_saving_small.pdf')
-save_fig(large_total, large_refresh, 'outputs/energy_saving_large.pdf')
+# save_fig(small_total, small_refresh, 'outputs/energy_saving_small.pdf')
+# save_fig(large_total, large_refresh, 'outputs/energy_saving_large.pdf')
+
+
+# -- v2: separate panels + shared legend (for LaTeX \subfigure (a)(b)) ---------
+def save_v2_figs():
+    all_vals = np.concatenate([v for d in [small_total, small_refresh,
+                                           large_total, large_refresh]
+                               for v in d.values()])
+    ymax = all_vals.max() * 1.38
+
+    # (a) Datacenter-scale
+    fig, ax = plt.subplots(figsize=(4.0, 2.5))
+    draw_subfigure(ax, large_total, large_refresh)
+    ax.set_ylim(0, ymax)
+    fig.tight_layout(pad=0.8)
+    fig.savefig('outputs/energy_datacenter_v2.pdf', bbox_inches='tight')
+    plt.close(fig)
+    print('Saved outputs/energy_datacenter_v2.pdf')
+
+    # (b) Edge-device
+    fig, ax = plt.subplots(figsize=(4.0, 2.5))
+    draw_subfigure(ax, small_total, small_refresh)
+    ax.set_ylim(0, ymax)
+    fig.tight_layout(pad=0.8)
+    fig.savefig('outputs/energy_edge_v2.pdf', bbox_inches='tight')
+    plt.close(fig)
+    print('Saved outputs/energy_edge_v2.pdf')
+
+    # shared legend strip
+    fig, ax = plt.subplots(figsize=(8.0, 0.45))
+    ax.set_visible(False)
+    fig.legend(handles=make_legend(), loc='center', ncol=6, frameon=False,
+               fontsize=10, handlelength=1.2, handletextpad=0.4, columnspacing=1.0)
+    fig.savefig('outputs/energy_legend_v2.pdf', bbox_inches='tight')
+    plt.close(fig)
+    print('Saved outputs/energy_legend_v2.pdf')
+
+save_v2_figs()
 
 

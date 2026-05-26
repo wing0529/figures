@@ -180,7 +180,7 @@ def draw_energy(ax):
     # [선택] 원하시는 옵션 하나만 남기고 주석을 해제하여 사용하세요.
     
     # Option A: 세련된 딥 모브 & 소프트 실버 (추천)
-    C_REF  = '#3E2E5E'  # Refresh (강조군 - 딥 퍼플)
+    C_REF  = '#544D7B' # Refresh (강조군 - 딥 퍼플)
     C_NREF = '#B0B7BD'  # Non-Refresh (대조군 - 실버 그레이)
     TEXT_COLOR_NREF = 'black'
     TEXT_COLOR_REF  = 'white'
@@ -198,16 +198,16 @@ def draw_energy(ax):
     # TEXT_COLOR_NREF = 'black'
     # TEXT_COLOR_REF  = 'white'
     
-    C_REF  = '#2a2a2a'  # Refresh (강조군 - 다크 그레이)
-    C_NREF = '#909090'  # Non-Refresh (대조군 - 실버 그레이)
-    TEXT_COLOR_NREF = 'black'
-    TEXT_COLOR_REF  = 'white'
+    # C_REF  = '#2a2a2a'  # Refresh (강조군 - 다크 그레이)
+    # C_NREF = '#909090'  # Non-Refresh (대조군 - 실버 그레이)
+    # TEXT_COLOR_NREF = 'black'
+    # TEXT_COLOR_REF  = 'white'
 
 
     # ==========================================================================
 
     x   = range(len(densities))
-    bw  = 0.5
+    bw  = 0.4
 
     # 바 차트 그리기 (zorder를 주어 그리드 뒤로 가도록 설정)
     br = ax.bar(x, refresh, width=bw, color=C_REF, edgecolor='black', linewidth=0.8, label='Refresh', zorder=3)
@@ -218,15 +218,25 @@ def draw_energy(ax):
     for i, (nr, r) in enumerate(zip(non_refresh, refresh)):
         # Refresh 텍스트 (하단 블록의 중앙)
         ax.text(i, r / 2, f'{r}%', ha='center', va='center', 
-                fontsize=11, fontweight='bold', color=TEXT_COLOR_REF, zorder=5)
+                fontsize=9, fontweight='bold', color=TEXT_COLOR_REF, zorder=5)
         # Non-Refresh 텍스트 (상단 블록의 중앙)
         ax.text(i, r + nr / 2, f'{nr}%', ha='center', va='center', 
-                fontsize=11, fontweight='bold', color=TEXT_COLOR_NREF, zorder=5)
+                fontsize=9, fontweight='bold', color=TEXT_COLOR_NREF, zorder=5)
 
     # 축 및 스타일 레이아웃 설정
     ax.set_xticks(list(x))
-    ax.set_xticklabels(densities, fontweight='bold')
+    ax.set_xticklabels(densities, fontweight='bold',fontsize=9)
     ax.set_yticks(range(0, 101, 20))
+    ax.set_yticklabels([f'{y}%' for y in range(0, 101, 20)], fontsize=9)
+    ax.set_ylim(0, 100)
+    ax.set_ylabel('Proportion (%) of\nActive Energy', fontweight='bold')
+    ax.set_xlabel('Density', fontweight='bold')
+
+    
+    ax.set_xticks(list(x))
+    ax.set_xticklabels(densities, fontweight='bold',fontsize=9)
+    ax.set_yticks(range(0, 101, 20))
+    ax.set_yticklabels([f'{y}%' for y in range(0, 101, 20)], fontsize=9)
     ax.set_ylim(0, 100)
     ax.set_ylabel('Proportion (%) of\nActive Energy', fontweight='bold')
     ax.set_xlabel('Density', fontweight='bold')
@@ -237,9 +247,25 @@ def draw_energy(ax):
     ax.grid(axis='y', linestyle=':', alpha=0.4, zorder=0)
     
     # 범례 설정 (깔끔하게 Non-Refresh가 먼저 오도록 순서 매칭)
+    # ax.legend(handles=[bn, br], labels=['Non-Refresh', 'Refresh'],
+    #           fontsize=9, frameon=True, framealpha=0.9,
+    #           edgecolor='#cccccc', ncol=2, bbox_to_anchor=(1.02, 1.10))
+    
+    # ax.legend(handles=[bn, br], labels=['Non-Refresh', 'Refresh'],
+    #         fontsize=9, frameon=True, framealpha=0.9,
+    #         edgecolor='#cccccc', 
+    #         ncol=1,  
+    #         loc='center left',             
+    #         # x축을 1.02에서 1.05로 늘려 오른쪽 여백을 주고,
+    #         # y축을 0.5에서 0.45~0.48로 살짝 내려 밸런스를 맞춥니다.
+    #         bbox_to_anchor=(1.05, 0.47))
+
     ax.legend(handles=[bn, br], labels=['Non-Refresh', 'Refresh'],
-              loc='upper right', fontsize=9, frameon=True, framealpha=0.9,
-              edgecolor='#cccccc', ncol=2, bbox_to_anchor=(1.02, 1.10))
+          fontsize=9, 
+          frameon=False,               # ★ True에서 False로 변경 (테두리 및 배경 제거)
+          ncol=2,                      
+          loc='lower center',          
+          bbox_to_anchor=(0.5, 1.02))
     return ax
 
 
@@ -274,36 +300,41 @@ def draw_bitwise(ax, model=DEFAULT_MODEL, metric=DEFAULT_METRIC,
     for xi, b in enumerate(bits_x):
         pct = worst[b]
         if math.isnan(pct):
-            ax.bar(xi, cap_h, width=0.58, color="#6b6b6b", alpha=0.72,
-                   edgecolor="white", lw=0.6, zorder=3)
+            ax.bar(xi, cap_h, width=0.58, color='#3E2E5E', alpha=0.72,
+                   edgecolor="black", lw=1, zorder=3)
             ax.text(xi, cap_h * 0.01, "NaN", ha="center", va="bottom",
                     color="white", fontsize=11, fontweight="bold", rotation=90, zorder=6)
         elif math.isinf(pct) or pct >= 1e6:
-            ax.bar(xi, cap_h, width=0.58, color=fcols[b], alpha=0.78,
-                   edgecolor="white", lw=0.6, zorder=3)
+            ax.bar(xi, cap_h, width=0.58, color='#3E2E5E', alpha=0.78,
+                   edgecolor="black", lw=1, zorder=3)
             ax.text(xi, cap_h * 0.01, ">100x", ha="center", va="bottom",
                     color="white", fontsize=11, fontweight="bold", rotation=90, zorder=6)
         else:
-            ax.bar(xi, pct, width=0.58, color=fcols[b], alpha=0.78,
-                   edgecolor="white", lw=0.6, zorder=3)
+            ax.bar(xi, pct, width=0.58, color='#3E2E5E', alpha=0.78,
+                   edgecolor="black", lw=1, zorder=3)
             lbl = fmt_delta_pct(pct)
-            if pct >= 10.0:
-                ax.text(xi, pct * 0.005, lbl, ha="center", va="bottom",
-                        color="white", fontsize=11, fontweight="bold", rotation=90, zorder=6)
+            # if pct >= 10.0:
+            #     ax.text(xi, pct * 0.005, lbl, ha="center", va="bottom",
+            #             color="white", fontsize=11, fontweight="bold", rotation=90, zorder=6)
             #elif 0.05 <= pct < 10.0:
                 # ax.text(xi, pct * 1.3, lbl, ha="center", va="bottom",
                 #         color="black", fontsize=9, fontweight="bold", rotation=90, zorder=6)
 
     # field background
-    ax.axvspan(-0.5,  0.5, alpha=0.07, color="#C00000", zorder=0)
-    ax.axvspan( 0.5,  5.5, alpha=0.07, color="#ED7D31", zorder=0)
-    ax.axvspan( 5.5, 15.5, alpha=0.05, color="#1565c0", zorder=0)
+    ax.axvspan(-0.5,  0.5, alpha=0.08, color='#b0b0b0' , zorder=0)
+    ax.axvspan( 0.5,  5.5, alpha=0.08, color='#b0b0b0' , zorder=0)
+    ax.axvspan( 5.5, 15.5, alpha=0.08, color='#b0b0b0' , zorder=0)
+
+    # ax.axvspan(-0.5,  0.5, alpha=0.07, color="#C00000", zorder=0)
+    # ax.axvspan( 0.5,  5.5, alpha=0.07, color="#ED7D31", zorder=0)
+    # ax.axvspan( 5.5, 15.5, alpha=0.05, color="#1565c0", zorder=0)
+
 
     # field labels
-    for xf, lbl, col in [(0.04,"sign","#C00000"),(0.22,"exponent","#ED7D31"),(0.68,"mantissa","#1565c0")]:
-        ax.text(xf, 0.93, lbl, transform=ax.transAxes, ha="center", va="center",
-                fontsize=12, fontweight="bold", color=col,
-                bbox={"facecolor":"white","edgecolor":"none","alpha":0.72,"pad":1.5}, zorder=10)
+    # for xf, lbl, col in [(0.04,"Sign","#C00000"),(0.22,"Exponent","#ED7D31"),(0.68,"Mantissa","#1565c0")]:
+    #     ax.text(xf, 0.93, lbl, transform=ax.transAxes, ha="center", va="center",
+    #             fontsize=12, fontweight="bold", color=col,
+    #             bbox={"facecolor":"white","edgecolor":"none","alpha":0.72,"pad":1.5}, zorder=10)
 
     ax.set_yscale("symlog", linthresh=0.1)
     ax.set_ylim(bottom=0, top=cap_h)
@@ -311,8 +342,8 @@ def draw_bitwise(ax, model=DEFAULT_MODEL, metric=DEFAULT_METRIC,
     ax.set_xlim(-0.6, len(bits_x) - 0.4)
     ax.set_xlabel("FP16 Bit Index", fontweight='bold')
     ax.set_ylabel("PPL Increase (%)", fontweight='bold')
-    ax.grid(axis="y", which="both", linestyle=":", alpha=0.35, zorder=0)
-    ax.axhline(0.0, color="black", linewidth=0.8, linestyle="--", zorder=5)
+    ax.grid(axis="y", which="both", linestyle=":", alpha=0.75, zorder=4)
+    ax.axhline(0.0, color="black", linewidth=0.8, linestyle="--", zorder=7)
     return ax
 
 # ── Main: save individual + combined ─────────────────────────────────────────
@@ -324,7 +355,7 @@ def main(model=DEFAULT_MODEL, metric=DEFAULT_METRIC,
     trefi_list = trefi_list or DEFAULT_TREFI
 
     # ── 1. Energy standalone ──────────────────────────────────────────────────
-    fig_e, ax_e = plt.subplots(figsize=(3, 2))
+    fig_e, ax_e = plt.subplots(figsize=(4, 2))
     draw_energy(ax_e)
     fig_e.tight_layout()
     save_fig(fig_e, OUT / "fig_energy.png")
