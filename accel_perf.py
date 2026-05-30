@@ -26,9 +26,25 @@ _FONT_PATH = '/home/wing02/arialnarrow_bold.ttf'
 if Path(_FONT_PATH).exists():
     fm.fontManager.addfont(_FONT_PATH)
     _FONT_NAME = fm.FontProperties(fname=_FONT_PATH).get_name()
+else:
+    _FONT_NAME = 'DejaVu Sans'
 
 # ── Raw data: [total, compute, stall] summed across all layers ────────────────
 # Layout: array shape (n_dnns, 3) — dnn order: LLaMA, OPT, ResNet
+
+# OPT large-scale uses the valid dim-aware rerun. The older
+# sweep_results/opt_dimaware/ run is diagnostic-only because it reused
+# fixed-layout R2 traces with a dim-aware layout.
+OPT_LARGE_SOURCE = (
+    '/gem5/SCALE-SIMv3_Ramulator2/SCALE-Sim/'
+    'sweep_results/opt_dimaware_valid/opt_tpuv5/'
+    'cycle_breakdown_summary_vs_config_opt_tpuv5.csv'
+)
+OPT_LARGE_BASE = [1568320, 1417990, 625635]
+OPT_LARGE_FP16 = [1372191, 1256010, 463655]
+OPT_LARGE_BF16 = [1366210, 1249197, 456842]
+OPT_LARGE_FP8 = [1366069, 1248945, 456590]
+
 resnet_large_total = (
     35549+19398+30791+29035+29035+19411+30791+29035+19411+30791+29035+
     8871+23050+15322+15012+16004+23050+15322+16004+23050+15322+16004+
@@ -59,9 +75,7 @@ large_base = np.array([
      10604+11321+581570+131875+131875,
      381+1098+254403+50084+50084],
     # opt-2.7B
-    [37853+22035+883703+223254+223254,
-     13127+13662+846041+194319+194319,
-     348+883+334842+66520+66520],
+    OPT_LARGE_BASE,
     # resnet50
     [resnet_large_total, resnet_large_compute, resnet_large_stall],
 ], dtype=float)
@@ -72,9 +86,7 @@ large_fp16 = np.array([
      10223+11302+529522+110100+110100,
      0+1079+202355+28309+28309],
     # opt-2.7B
-    [38214+19774+891850+232537+232537,
-     14422+13837+853962+203356+203356,
-     1643+1058+342763+75557+75557],
+    OPT_LARGE_FP16,
     # resnet50
     [resnet_large_total, resnet_large_compute, resnet_large_stall],
 ], dtype=float)
@@ -85,9 +97,7 @@ large_bf16 = np.array([
      10223+11302+529792+110370+110370,
      0+1079+202625+28579+28579],
     # opt-2.7B
-    [38553+21431+900486+239522+239522,
-     15518+13837+862575+210345+210345,
-     2739+1058+351376+82546+82546],
+    OPT_LARGE_BF16,
     # resnet50
     [resnet_large_total, resnet_large_compute, resnet_large_stall],
 ], dtype=float)
@@ -98,9 +108,7 @@ large_fp8 = np.array([
      10223+11302+529792+110370+110370,
      0+1079+202625+28579+28579],
     # opt-2.7B
-    [38553+21431+900486+239522+239522,
-     15518+13837+862575+210345+210345,
-     2739+1058+351376+82546+82546],
+    OPT_LARGE_FP8,
     # resnet50
     [resnet_large_total, resnet_large_compute, resnet_large_stall],
 ], dtype=float)
