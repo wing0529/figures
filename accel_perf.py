@@ -45,29 +45,20 @@ OPT_LARGE_FP16 = [1372191, 1256010, 463655]
 OPT_LARGE_BF16 = [1366210, 1249197, 456842]
 OPT_LARGE_FP8 = [1366069, 1248945, 456590]
 
-resnet_large_total = (
-    35549+19398+30791+29035+29035+19411+30791+29035+19411+30791+29035+
-    8871+23050+15322+15012+16004+23050+15322+16004+23050+15322+16004+
-    23050+15322+10715+25982+17215+24228+12292+25982+17215+12292+
-    25982+17215+12292+25982+17215+12292+25982+17215+12292+25982+
-    17215+13261+48824+24184+40762+22955+48824+24184+22955+48824+24184
-)
 
-resnet_large_compute = (
-    14970+8566+13366+8375+8375+8565+13366+8375+8565+13366+8375+
-    1897+8600+3447+3447+7745+8600+3447+7745+8600+3447+7745+
-    8600+3447+4000+13274+8439+12226+4195+13274+8439+4195+
-    13274+8439+4195+13274+8439+4195+13274+8439+4195+13274+
-    8439+6867+33940+14677+27717+13660+33940+14677+13660+33940+14677
+# ResNet50 uses the valid dim-aware rerun generated from layouts/resnet_dimaware.csv.
+RESNET_SOURCE = (
+    '/gem5/SCALE-SIMv3_Ramulator2/SCALE-Sim/'
+    'sweep_results/resnet_dimaware_valid/all_cycle_breakdown_summary.csv'
 )
-
-resnet_large_stall = (
-    1661+4665+1661+4474+4474+4664+1661+4474+4664+1661+4474+
-    348+851+348+348+4646+851+348+4646+851+348+4646+
-    851+348+2077+4617+4592+4531+348+4617+4592+348+
-    4617+4592+348+4617+4592+348+4617+4592+348+4617+
-    4592+348+4601+1638+1638+621+4601+1638+621+4601+1638
-)
+RESNET_EDGE_BASE = [6664393, 6019166, 90311]
+RESNET_EDGE_FP16 = [6371102, 5971221, 42366]
+RESNET_EDGE_BF16 = [6357886, 5957832, 28977]
+RESNET_EDGE_FP8 = [6371509, 5971550, 42695]
+RESNET_LARGE_BASE = [1107098, 517054, 94299]
+RESNET_LARGE_FP16 = [814882, 461549, 38794]
+RESNET_LARGE_BF16 = [802573, 447211, 24456]
+RESNET_LARGE_FP8 = [822144, 468733, 45978]
 
 large_base = np.array([
     # llama 3.2-1B
@@ -77,7 +68,7 @@ large_base = np.array([
     # opt-2.7B
     OPT_LARGE_BASE,
     # resnet50
-    [resnet_large_total, resnet_large_compute, resnet_large_stall],
+    RESNET_LARGE_BASE,
 ], dtype=float)
 
 large_fp16 = np.array([
@@ -88,7 +79,7 @@ large_fp16 = np.array([
     # opt-2.7B
     OPT_LARGE_FP16,
     # resnet50
-    [resnet_large_total, resnet_large_compute, resnet_large_stall],
+    RESNET_LARGE_FP16,
 ], dtype=float)
 
 large_bf16 = np.array([
@@ -99,7 +90,7 @@ large_bf16 = np.array([
     # opt-2.7B
     OPT_LARGE_BF16,
     # resnet50
-    [resnet_large_total, resnet_large_compute, resnet_large_stall],
+    RESNET_LARGE_BF16,
 ], dtype=float)
 
 large_fp8 = np.array([
@@ -110,10 +101,9 @@ large_fp8 = np.array([
     # opt-2.7B
     OPT_LARGE_FP8,
     # resnet50
-    [resnet_large_total, resnet_large_compute, resnet_large_stall],
+    RESNET_LARGE_FP8,
 ], dtype=float)
 
-# Edge-device config — all dummy = base for now
 # Edge-device config
 edge_base = np.array([
     # llama 3.2-1B
@@ -125,9 +115,7 @@ edge_base = np.array([
      49116+49362+15515325+3880125+3880125,
      637+883+1726+1726+1726],
     # resnet50
-    [138607+29847+130852+69679+69679+66218+130852+69679+66218+130852+69679+38044+141156+69597+124439+73702+141156+69597+73702+141156+69597+73702+141156+69597+48546+184614+91382+163828+86422+184614+91382+86422+184614+91382+86422+184614+91382+86422+184614+91382+86422+184614+91382+83050+344220+159373+303853+158142+344220+159373+158142+344220+159373,
-     127262+17544+117162+56343+56343+52562+117162+56343+52562+117162+56343+28443+127314+56539+112731+60837+127314+56539+60837+127314+56539+60837+127314+56539+39196+171656+78831+153010+74587+171656+78831+74587+171656+78831+74587+171656+78831+74587+171656+78831+74587+171656+78831+73563+330365+147325+293757+147052+330365+147325+147052+330365+147325,
-     883+4625+883+4664+4664+883+883+4664+883+883+4664+348+883+348+348+4646+883+348+4646+883+348+4646+883+348+2077+4617+4592+4531+348+4617+4592+348+4617+4592+348+4617+4592+348+4617+4592+348+4617+4592+348+894+894+894+621+894+894+621+894+894],
+    RESNET_EDGE_BASE,
 ], dtype=float)
 
 edge_fp16 = np.array([
@@ -140,9 +128,7 @@ edge_fp16 = np.array([
      49542+49537+15515044+3879844+3879844,
      1063+1058+1445+1445+1445],
     # resnet50
-    [134603+21608+126551+61377+61377+61868+126551+61377+61868+126551+61377+35302+137427+64972+121051+64972+137427+64972+64972+137427+64972+64972+137427+64972+42256+175997+83312+156213+81963+175997+83312+81963+175997+83312+81963+175997+83312+81963+175997+83312+81963+175997+83312+79033+339993+154990+298424+154249+339993+154990+154249+339993+154990,
-     127437+13486+117337+52246+52246+52737+117337+52246+52737+117337+52246+29980+128213+56687+113884+56687+128213+56687+56687+128213+56687+56687+128213+56687+37462+167551+75163+149558+74582+167551+75163+74582+167551+75163+74582+167551+75163+74582+167551+75163+74582+167551+75163+73983+330779+147739+294171+147510+330779+147739+147510+330779+147739,
-     1058+567+1058+567+567+1058+1058+567+1058+1058+567+1885+1782+496+1501+496+1782+496+496+1782+496+496+1782+496+343+512+924+1079+343+512+924+343+512+924+343+512+924+343+512+924+343+512+924+768+1308+1308+1308+1079+1308+1308+1079+1308+1308],
+    RESNET_EDGE_FP16,
 ], dtype=float)
 
 edge_bf16 = np.array([
@@ -155,9 +141,7 @@ edge_bf16 = np.array([
      49542+49537+15515322+3880122+3880122,
      1063+1058+1723+1723+1723],
     # resnet50
-    [134603+22099+126551+61868+61868+61868+126551+61868+61868+126551+61868+33913+136703+64972+120046+64972+136703+64972+64972+136703+64972+64972+136703+64972+42300+175997+83467+156213+84900+175997+83467+84900+175997+83467+84900+175997+83467+84900+175997+83467+84900+175997+83467+79033+339993+154990+298424+154249+339993+154990+154249+339993+154990,
-     127437+13977+117337+52737+52737+52737+117337+52737+52737+117337+52737+28591+127489+56687+112879+56687+127489+56687+56687+127489+56687+56687+127489+56687+37462+167551+75318+149558+77519+167551+75318+77519+167551+75318+77519+167551+75318+77519+167551+75318+77519+167551+75318+73983+330779+147739+294171+147510+330779+147739+147510+330779+147739,
-     1058+1058+1058+1058+1058+1058+1058+1058+1058+1058+1058+496+1058+496+496+496+1058+496+496+1058+496+496+1058+496+343+512+1079+1079+3280+512+1079+3280+512+1079+3280+512+1079+3280+512+1079+3280+512+1079+768+1308+1308+1308+1079+1308+1308+1079+1308+1308],
+    RESNET_EDGE_BF16,
 ], dtype=float)
 
 edge_fp8 = np.array([
@@ -170,9 +154,7 @@ edge_fp8 = np.array([
      49542+49537+15515322+3880122+3880122,
      1063+1058+1723+1723+1723],
     # resnet50
-    [134603+22099+127443+62726+62726+62758+127443+62726+62758+127443+62726+33913+137359+64972+120046+66248+137359+64972+66248+137359+64972+66248+137359+64972+42321+175997+83467+157052+82007+175997+83467+82007+175997+83467+82007+175997+83467+82007+175997+83467+82007+175997+83467+79033+340587+154990+298424+154249+340587+154990+154249+340587+154990,
-     127437+13977+118229+53595+53595+53627+118229+53595+53627+118229+53595+28591+128145+56687+112879+57963+128145+56687+57963+128145+56687+57963+128145+56687+37474+167551+75318+150397+74582+167551+75318+74582+167551+75318+74582+167551+75318+74582+167551+75318+74582+167551+75318+73983+331373+147739+294171+147510+331373+147739+147510+331373+147739,
-     1058+1058+1950+1916+1916+1948+1950+1916+1948+1950+1916+496+1714+496+496+1772+1714+496+1772+1714+496+1772+1714+496+355+512+1079+1918+343+512+1079+343+512+1079+343+512+1079+343+512+1079+343+512+1079+768+1902+1308+1308+1079+1902+1308+1079+1902+1308],
+    RESNET_EDGE_FP8,
 ], dtype=float)
 
 
@@ -266,7 +248,6 @@ def draw_subfigure(ax, base, fp16_raw, bf16_raw, fp8_raw):
             ax.text(xi, t + 0.008, f'{t:.2f}',
                     ha='center', va='bottom', fontsize=10, rotation=90, zorder=4)
 
-    ax.axhline(1.0, color='#555555', linewidth=0.8, linestyle='--', zorder=2)
     ax.set_xticks(x)
     ax.set_xticklabels(DNNS)
     ax.tick_params(axis='x', bottom=False, top=False,
@@ -287,29 +268,36 @@ def make_legend():
     ]
 
 
-def save_fig(base, fp16_raw, bf16_raw, fp8_raw, out_path):
-    all_vals = np.concatenate([
-        np.concatenate(decompose(r, base)) for r in [fp16_raw, bf16_raw, fp8_raw]
-    ])
+def save_fig(base, fp16_raw, bf16_raw, fp8_raw, out_path, top_pad=0.08):
+    totals = np.concatenate([r[:, 0] / base[:, 0]
+                             for r in [fp16_raw, bf16_raw, fp8_raw]])
     fig, ax = plt.subplots(figsize=(5.5, 3))
     draw_subfigure(ax, base, fp16_raw, bf16_raw, fp8_raw)
-    ymax = max(all_vals.max() * 1.35, 1.55)
+    ymax = max(1.06, totals.max() + top_pad)
     ax.set_ylim(0, ymax)
-    ax.set_yticks([0.00, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50])
-    fig.legend(handles=make_legend(), loc='upper center', ncol=3, frameon=False,
-               bbox_to_anchor=(0.5, 0.99))
-    fig.tight_layout(pad=0.5, rect=[0, 0.10, 1, 0.83])
+    ax.set_yticks([0.00, 0.25, 0.50, 0.75, 1.00])
+    fig.tight_layout(pad=0.5)
     fig.savefig(out_path, bbox_inches='tight')
     plt.close(fig)
     print(f'Saved {out_path}')
 
+
+def save_legend(out_path):
+    fig, ax = plt.subplots(figsize=(4.8, 0.35))
+    ax.axis('off')
+    fig.legend(handles=make_legend(), loc='center', ncol=3, frameon=False,
+               bbox_to_anchor=(0.5, 0.5))
+    fig.savefig(out_path, bbox_inches='tight', pad_inches=0.02)
+    plt.close(fig)
+    print(f'Saved {out_path}')
+
 def save_combined_fig():
-    all_vals = np.concatenate([
-        np.concatenate(decompose(r, large_base)) for r in [large_fp16, large_bf16, large_fp8]
+    totals = np.concatenate([
+        r[:, 0] / large_base[:, 0] for r in [large_fp16, large_bf16, large_fp8]
     ] + [
-        np.concatenate(decompose(r, edge_base))  for r in [edge_fp16,  edge_bf16,  edge_fp8]
+        r[:, 0] / edge_base[:, 0] for r in [edge_fp16, edge_bf16, edge_fp8]
     ])
-    ymax = max(all_vals.max() * 1.35, 1.55)
+    ymax = max(1.06, totals.max() + 0.08)
 
     fig, (ax_l, ax_r) = plt.subplots(1, 2, figsize=(8, 4), sharey=True)
 
@@ -319,12 +307,12 @@ def save_combined_fig():
     ax_r.set_ylabel('')
 
     ax_l.set_ylim(0, ymax)
-    ax_l.set_yticks([0.00, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50])
+    ax_l.set_yticks([0.00, 0.25, 0.50, 0.75, 1.00])
 
-    ax_l.text(0.5, -0.22, 'Datacenter-scale', transform=ax_l.transAxes,
-              ha='center', va='top', fontweight='bold', fontsize=11)
-    ax_r.text(0.5, -0.22, 'Edge-device', transform=ax_r.transAxes,
-              ha='center', va='top', fontweight='bold', fontsize=11)
+    # ax_l.text(0.5, -0.22, 'Datacenter-scale', transform=ax_l.transAxes,
+    #           ha='center', va='top', fontweight='bold', fontsize=11)
+    # ax_r.text(0.5, -0.22, 'Edge-device', transform=ax_r.transAxes,
+    #           ha='center', va='top', fontweight='bold', fontsize=11)
 
     fig.legend(handles=make_legend(), loc='upper center',
                ncol=3, frameon=False, bbox_to_anchor=(0.5, 0.99))
@@ -333,9 +321,10 @@ def save_combined_fig():
     plt.close(fig)
     print('Saved outputs/accel_perf_combined.pdf')
 
-# ── Generate both figures ─────────────────────────────────────────────────────
-save_fig(large_base, large_fp16, large_bf16, large_fp8, 'outputs/accel_perf_large.pdf')
-save_fig(edge_base,  edge_fp16,  edge_bf16,  edge_fp8,  'outputs/accel_perf_edge.pdf')
+# ── Generate figures ──────────────────────────────────────────────────────────
+save_legend('outputs/accel_perf_legend.pdf')
+save_fig(large_base, large_fp16, large_bf16, large_fp8, 'outputs/accel_perf_large.pdf',top_pad=0.4)
+save_fig(edge_base,  edge_fp16,  edge_bf16,  edge_fp8,  'outputs/accel_perf_edge.pdf', top_pad=0.4)
 
 
 # -- Generate combined figure --------------------------------------------------
