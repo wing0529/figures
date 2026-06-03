@@ -45,6 +45,17 @@ OPT_LARGE_FP16 = [1372191, 1256010, 463655]
 OPT_LARGE_BF16 = [1366210, 1249197, 456842]
 OPT_LARGE_FP8 = [1366069, 1248945, 456590]
 
+OPT_EDGE_SOURCE = (
+    '/gem5/SCALE-SIMv3_Ramulator2/SCALE-Sim/'
+    'sweep_results/opt_dimaware_valid/opt_small/'
+    'cycle_breakdown_summary_vs_config_opt_small.csv'
+)
+OPT_EDGE_BASE = [23450771, 23388376, 21021]
+OPT_EDGE_FP16 = [23414109, 23374123, 6768]
+# TODO: replace after opt_small bf16/fp8 dim-aware rerun completes.
+OPT_EDGE_BF16 = [np.nan, np.nan, np.nan]
+OPT_EDGE_FP8 = [np.nan, np.nan, np.nan]
+
 
 # ResNet50 uses the valid dim-aware rerun generated from layouts/resnet_dimaware.csv.
 RESNET_SOURCE = (
@@ -111,9 +122,7 @@ edge_base = np.array([
      39420+39881+9929597+2483069+2483069,
      637+1098+894+894+894],
     # opt-2.7B
-    [59147+59725+15530121+3895123+3895123,
-     49116+49362+15515325+3880125+3880125,
-     637+883+1726+1726+1726],
+    OPT_EDGE_BASE,
     # resnet50
     RESNET_EDGE_BASE,
 ], dtype=float)
@@ -124,9 +133,7 @@ edge_fp16 = np.array([
      38783+39862+9930011+2483483+2483483,
      0+1079+1308+1308+1308],
     # opt-2.7B
-    [57119+56734+15528073+3892143+3892143,
-     49542+49537+15515044+3879844+3879844,
-     1063+1058+1445+1445+1445],
+    OPT_EDGE_FP16,
     # resnet50
     RESNET_EDGE_FP16,
 ], dtype=float)
@@ -137,9 +144,7 @@ edge_bf16 = np.array([
      38783+39862+9930011+2483483+2483483,
      0+1079+1308+1308+1308],
     # opt-2.7B
-    [58617+58766+15528720+3893637+3893637,
-     49542+49537+15515322+3880122+3880122,
-     1063+1058+1723+1723+1723],
+    OPT_EDGE_BF16,
     # resnet50
     RESNET_EDGE_BF16,
 ], dtype=float)
@@ -150,9 +155,7 @@ edge_fp8 = np.array([
      38783+39862+9930011+2483483+2483483,
      0+1079+1308+1308+1308],
     # opt-2.7B
-    [58617+58766+15528720+3893637+3893637,
-     49542+49537+15515322+3880122+3880122,
-     1063+1058+1723+1723+1723],
+    OPT_EDGE_FP8,
     # resnet50
     RESNET_EDGE_FP8,
 ], dtype=float)
@@ -241,6 +244,11 @@ def draw_subfigure(ax, base, fp16_raw, bf16_raw, fp8_raw):
 
         totals = dm + st + sy
         for xi, t in zip(xpos, totals):
+            if not np.isfinite(t):
+                ax.text(xi, 0.03, 'TBD',
+                        ha='center', va='bottom', fontsize=8, rotation=90,
+                        zorder=4)
+                continue
             # precision label just below x-axis tick area, rotated
             ax.text(xi, -0.02, prec,
                     ha='center', va='top', fontsize=10, rotation=45,
