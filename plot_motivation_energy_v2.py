@@ -361,32 +361,7 @@ def main(model=DEFAULT_MODEL, metric=DEFAULT_METRIC,
     save_fig(fig_e, OUT / "fig_energy.png")
     plt.close(fig_e)
 
-    # ── 2. Bitwise standalone ─────────────────────────────────────────────────
-    fig_b, ax_b = plt.subplots(figsize=(9.0, 3.2))
-    draw_bitwise(ax_b, model, metric, csv_path, trefi_list)
-    fig_b.tight_layout()
-    save_fig(fig_b, OUT / "fig_bitwise.png")
-    plt.close(fig_b)
 
-    # ── 3. Combined (1 row, 2 cols, width ratio 1:2.5) ────────────────────────
-    fig_c, (ax_l, ax_r) = plt.subplots(
-        1, 2,
-        figsize=(13.0, 3.2),
-        gridspec_kw={"width_ratios": [1, 2.6], "wspace": 0.30}
-    )
-    draw_energy(ax_l)
-    draw_bitwise(ax_r, model, metric, csv_path, trefi_list)
-
-    # subfigure labels (a) / (b)
-    # for ax, lbl in [(ax_l, "(a)"), (ax_r, "(b)")]:
-    #     ax.text(-0.12, 1.04, lbl, transform=ax.transAxes,
-    #             fontsize=13, fontweight='bold', va='bottom', ha='left')
-
-    fig_c.tight_layout()
-    save_fig(fig_c, OUT / "fig_combined.png", dpi=300)
-    plt.close(fig_c)
-
-    print("\nDone. Files in:", OUT)
 
 
 if __name__ == "__main__":

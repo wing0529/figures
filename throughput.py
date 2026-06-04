@@ -47,7 +47,7 @@ COLOR_FP8 = '#BE6C91' #92658E' #(상단 (Layer 3))
 
 
 FIGURE_DIR  = Path(__file__).resolve().parent
-_FONT_PATH = '/home/wing02/arialnarrow_bold.ttf'
+_FONT_PATH = 'arialnarrow_bold.ttf'
 if Path(_FONT_PATH).exists():
     fm.fontManager.addfont(_FONT_PATH)
     _FONT_NAME = fm.FontProperties(fname=_FONT_PATH).get_name()
@@ -124,80 +124,44 @@ def legend_patches():
 
 
 # ── Large-scale figure ────────────────────────────────────────────────────────
-fig1, ax1 = plt.subplots(figsize=(3.6, 2.6))
+fig1, ax1 = plt.subplots(figsize=(4, 2))
 draw_suBFigure(ax1, large_dnns, large_FP16, large_BF16, large_FP8)
 
-fig1.legend(handles=legend_patches(), loc='lower center',
-            ncol=4, frameon=False, bbox_to_anchor=(0.5, -0.06))
+fig1.legend(handles=legend_patches(), loc='upper center',
+            ncol=4, frameon=False, bbox_to_anchor=(0.5, 1.06))
 fig1.tight_layout(pad=0.5, rect=[0, 0.08, 1, 1])
 fig1.savefig('outputs/throughput_large.pdf', bbox_inches='tight')
 plt.close(fig1)
 
 # ── Edge-device figure ────────────────────────────────────────────────────────
-fig2, ax2 = plt.subplots(figsize=(3.6, 2.6))
+fig2, ax2 = plt.subplots(figsize=(4, 2))
 draw_suBFigure(ax2, edge_dnns, edge_FP16, edge_BF16, edge_FP8)
-fig2.legend(handles=legend_patches(), loc='lower center',
-            ncol=4, frameon=False, bbox_to_anchor=(0.5, -0.06))
+fig2.legend(handles=legend_patches(), loc='upper center',
+            ncol=4, frameon=False, bbox_to_anchor=(0.5, 1.06))
 fig2.tight_layout(pad=0.5, rect=[0, 0.08, 1, 1])
 fig2.savefig('outputs/throughput_edge.pdf', bbox_inches='tight')
 plt.close(fig2)
 
 # ── Combined figure (large + edge side by side) ───────────────────────────────
-fig, (ax_l, ax_r) = plt.subplots(1, 2, figsize=(8, 2.8), sharey=True,
-                                  gridspec_kw={'wspace': 0})
+# fig, (ax_l, ax_r) = plt.subplots(1, 2, figsize=(8, 2.8), sharey=True,
+#                                   gridspec_kw={'wspace': 0})
 
-draw_suBFigure(ax_l, large_dnns, large_FP16, large_BF16, large_FP8)
-draw_suBFigure(ax_r, edge_dnns,  edge_FP16,  edge_BF16,  edge_FP8)
+# draw_suBFigure(ax_l, large_dnns, large_FP16, large_BF16, large_FP8)
+# draw_suBFigure(ax_r, edge_dnns,  edge_FP16,  edge_BF16,  edge_FP8)
 
-ax_l.set_title(y=-0.28, label='Datacenter-scale', fontweight='bold')
-ax_r.set_title(y=-0.28, label='Edge-device', fontweight='bold')
+# ax_l.set_title(y=-0.28, label='Datacenter-scale', fontweight='bold')
+# ax_r.set_title(y=-0.28, label='Edge-device', fontweight='bold')
 
-# sharey=True 쓰면 오른쪽 y축 label 중복되므로 제거
-ax_r.set_ylabel('')
-ax_r.spines['left'].set_visible(False)
+# # sharey=True 쓰면 오른쪽 y축 label 중복되므로 제거
+# ax_r.set_ylabel('')
+# ax_r.spines['left'].set_visible(False)
 
-fig.tight_layout(pad=0.8, rect=[0, 0.10, 1, 0.90])
-fig.subplots_adjust(wspace=0)
-fig.legend(handles=legend_patches(), loc='upper center',
-           ncol=3, frameon=False, bbox_to_anchor=(0.5, 0.99))
-fig.savefig('outputs/throughput_combined.pdf', bbox_inches='tight')
-plt.close(fig)
-print('Saved outputs/throughput_combined.pdf')
+# fig.tight_layout(pad=0.8, rect=[0, 0.10, 1, 0.90])
+# fig.subplots_adjust(wspace=0)
+# fig.legend(handles=legend_patches(), loc='upper center',
+#            ncol=3, frameon=False, bbox_to_anchor=(0.5, 0.99))
+# fig.savefig('outputs/throughput_combined.pdf', bbox_inches='tight')
+# plt.close(fig)
+# print('Saved outputs/throughput_combined.pdf')
 
-print('Saved outputs/throughput_large.pdf and outputs/throughput_edge.pdf and Saved outputs/throughput_combined.pdf')
-
-
-# ── v2: separate panels + shared legend (for LaTeX \subfigure (a)(b)) ────────
-def save_v2_figs():
-    all_max = max(large_FP16.max(), large_BF16.max(), large_FP8.max(),
-                  edge_FP16.max(),  edge_BF16.max(),  edge_FP8.max())
-    ymax_global = all_max * 1.10
-
-    # (a) Datacenter-scale
-    fig, ax = plt.subplots(figsize=(4.0, 2.5))
-    draw_suBFigure(ax, large_dnns, large_FP16, large_BF16, large_FP8)
-    ax.set_ylim(0.95, ymax_global)
-    fig.tight_layout(pad=0.8)
-    fig.savefig('outputs/throughput_datacenter_v2.pdf', bbox_inches='tight')
-    plt.close(fig)
-    print('Saved outputs/throughput_datacenter_v2.pdf')
-
-    # (b) Edge-device
-    fig, ax = plt.subplots(figsize=(4.0, 2.5))
-    draw_suBFigure(ax, edge_dnns, edge_FP16, edge_BF16, edge_FP8)
-    ax.set_ylim(0.95, ymax_global)
-    fig.tight_layout(pad=0.8)
-    fig.savefig('outputs/throughput_edge_v2.pdf', bbox_inches='tight')
-    plt.close(fig)
-    print('Saved outputs/throughput_edge_v2.pdf')
-
-    # shared legend strip
-    fig, ax = plt.subplots(figsize=(8.0, 0.45))
-    ax.set_visible(False)
-    fig.legend(handles=legend_patches(), loc='center', ncol=3, frameon=False,
-               fontsize=10, handlelength=1.2, handletextpad=0.4, columnspacing=1.0)
-    fig.savefig('outputs/throughput_legend_v2.pdf', bbox_inches='tight')
-    plt.close(fig)
-    print('Saved outputs/throughput_legend_v2.pdf')
-
-save_v2_figs()
+# print('Saved outputs/throughput_large.pdf and outputs/throughput_edge.pdf and Saved outputs/throughput_combined.pdf')

@@ -18,10 +18,8 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
 os.makedirs('outputs', exist_ok=True)
 
-
-
 FIGURE_DIR  = Path(__file__).resolve().parent
-_FONT_PATH = '/home/wing02/arialnarrow_bold.ttf'
+_FONT_PATH = 'arialnarrow_bold.ttf'
 if Path(_FONT_PATH).exists():
     fm.fontManager.addfont(_FONT_PATH)
     _FONT_NAME = fm.FontProperties(fname=_FONT_PATH).get_name()
@@ -159,7 +157,7 @@ def draw_subfigure(ax, total, refresh, draw_mode='both', normalized=False):
     ax.set_xticklabels(DNNS)
     ax.set_xlim(-0.5, len(DNNS) - 0.5)
     if normalized:
-        ax.set_yticks([0.00, 0.25, 0.50, 0.75, 1.00])
+        ax.set_yticks([0.00, 0.25, 0.50, 0.75,1.00])
     ax.set_ylabel('Normalized energy' if normalized else 'Saved energy (%)', fontweight='bold')
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
@@ -228,8 +226,6 @@ def save_combined_fig(small_total, small_refresh, large_total, large_refresh, ou
     print(f'Saved {out_path}')
 
 
-
-
 def save_combined_fig_total(small_total, large_total, out_path, normalized=False):
     """Generate combined figure showing only total energy saving (solid bars)."""
     if normalized:
@@ -265,7 +261,7 @@ def save_combined_fig_total(small_total, large_total, out_path, normalized=False
 def save_combined_fig_refresh(small_refresh, large_refresh, out_path, normalized=False):
     """Generate combined figure showing only refresh energy saving (hatched bars)."""
     if normalized:
-        ymax = 1.15
+        ymax = 0.75
     else:
         all_vals = np.concatenate([v for d in [small_refresh, large_refresh] for v in d.values()])
         ymax = all_vals.max() * 1.38
@@ -294,14 +290,24 @@ def save_combined_fig_refresh(small_refresh, large_refresh, out_path, normalized
     print(f'Saved {out_path}')
 
 
-def save_panel(data, out_path, draw_mode, ymax, normalized=False):
+def save_panel(data, out_path, draw_mode, ymax, normalized=False, legend=False):
     """Single-panel figure (no legend) for one scale × one type."""
-    fig, ax = plt.subplots(figsize=(4.0, 2.5))
+    fig, ax = plt.subplots(figsize=(4.0, 2))
     if draw_mode == 'total':
         draw_subfigure(ax, data, None, draw_mode='total', normalized=normalized)
     else:
         draw_subfigure(ax, None, data, draw_mode='refresh', normalized=normalized)
     ax.set_ylim(0, ymax)
+    if legend:
+        ax.legend(handles=make_legend(draw_mode=draw_mode), 
+                  loc='lower center',             # 범례의 하단 기준점을
+                  bbox_to_anchor=(0.5, 1.05),     # 그래프의 상단(1.05 위치)에 배치
+                  ncol=3, 
+                  frameon=False, 
+                  fontsize=10,
+                  handlelength=1.2, 
+                  handletextpad=0.4, 
+                  columnspacing=1.0)
     fig.tight_layout(pad=0.8)
     fig.savefig(out_path, bbox_inches='tight')
     plt.close(fig)
@@ -323,76 +329,38 @@ def save_legend_strip(draw_mode, out_path):
 # -- Generate figures ----------------------------------------------------------
 _suffix = 'norm' if NORMALIZED else 'saving'
 
-save_combined_fig(small_total, small_refresh,
-                  large_total, large_refresh,
-                  f'outputs/energy_{_suffix}_combined.pdf',
-                  normalized=NORMALIZED)
-
-save_combined_fig_total(small_total, large_total,
-                        f'outputs/energy_{_suffix}_total.pdf',
-                        normalized=NORMALIZED)
-
-save_combined_fig_refresh(small_refresh, large_refresh,
-                          f'outputs/energy_{_suffix}_refresh.pdf',
-                          normalized=NORMALIZED)
-
 # -- 4 single panels + 2 legend strips (6 PDFs) --------------------------------
 if NORMALIZED:
-    _ymax = 1.15
+    _ymax = 1.00
 else:
     _all = np.concatenate([v for d in [small_total, small_refresh,
                                        large_total, large_refresh]
                            for v in d.values()])
     _ymax = _all.max() * 1.38
 
-save_panel(large_total,   f'outputs/energy_{_suffix}_datacenter_total.pdf',   'total',   _ymax, NORMALIZED)
-save_panel(large_refresh, f'outputs/energy_{_suffix}_datacenter_refresh.pdf', 'refresh', _ymax, NORMALIZED)
-save_panel(small_total,   f'outputs/energy_{_suffix}_edge_total.pdf',         'total',   _ymax, NORMALIZED)
-save_panel(small_refresh, f'outputs/energy_{_suffix}_edge_refresh.pdf',       'refresh', _ymax, NORMALIZED)
+save_panel(large_total,   f'outputs/energy_{_suffix}_datacenter_total.pdf',   'total',   _ymax, NORMALIZED,legend=False)
+save_panel(small_total,   f'outputs/energy_{_suffix}_edge_total.pdf',         'total',   _ymax, NORMALIZED,legend=False)
+
+if NORMALIZED:
+    _ymax = 0.75
+save_panel(large_refresh, f'outputs/energy_{_suffix}_datacenter_refresh.pdf', 'refresh', _ymax, NORMALIZED,legend=False)
+save_panel(small_refresh, f'outputs/energy_{_suffix}_edge_refresh.pdf',       'refresh', _ymax, NORMALIZED,legend=False)
 save_legend_strip('total',   f'outputs/energy_{_suffix}_legend_total.pdf')
 save_legend_strip('refresh', f'outputs/energy_{_suffix}_legend_refresh.pdf')
 
+# -- panels with legends --------------------------------
+if NORMALIZED:
+    _ymax = 1.00
+else:
+    _all = np.concatenate([v for d in [small_total, small_refresh,
+                                       large_total, large_refresh]
+                           for v in d.values()])
+    _ymax = _all.max() * 1.38
 
-# -- Generate both figures -----------------------------------------------------
-# save_fig(small_total, small_refresh, 'outputs/energy_saving_small.pdf')
-# save_fig(large_total, large_refresh, 'outputs/energy_saving_large.pdf')
+save_panel(large_total,   f'outputs/energy_{_suffix}_datacenter_total_legend.pdf',   'total',   _ymax, NORMALIZED,legend=True)
+save_panel(small_total,   f'outputs/energy_{_suffix}_edge_total_legend.pdf',         'total',   _ymax, NORMALIZED,legend=True)
 
-
-# -- v2: separate panels + shared legend (for LaTeX \subfigure (a)(b)) ---------
-def save_v2_figs():
-    all_vals = np.concatenate([v for d in [small_total, small_refresh,
-                                           large_total, large_refresh]
-                               for v in d.values()])
-    ymax = all_vals.max() * 1.38
-
-    # (a) Datacenter-scale
-    fig, ax = plt.subplots(figsize=(4.0, 2.5))
-    draw_subfigure(ax, large_total, large_refresh)
-    ax.set_ylim(0, ymax)
-    fig.tight_layout(pad=0.8)
-    fig.savefig('outputs/energy_datacenter_v2.pdf', bbox_inches='tight')
-    plt.close(fig)
-    print('Saved outputs/energy_datacenter_v2.pdf')
-
-    # (b) Edge-device
-    fig, ax = plt.subplots(figsize=(4.0, 2.5))
-    draw_subfigure(ax, small_total, small_refresh)
-    ax.set_ylim(0, ymax)
-    fig.tight_layout(pad=0.8)
-    fig.savefig('outputs/energy_edge_v2.pdf', bbox_inches='tight')
-    plt.close(fig)
-    print('Saved outputs/energy_edge_v2.pdf')
-
-    # shared legend strip
-    fig, ax = plt.subplots(figsize=(8.0, 0.45))
-    ax.set_visible(False)
-    fig.legend(handles=make_legend(), loc='center', ncol=6, frameon=False,
-               fontsize=10, handlelength=1.2, handletextpad=0.4, columnspacing=1.0)
-    fig.savefig('outputs/energy_legend_v2.pdf', bbox_inches='tight')
-    plt.close(fig)
-    print('Saved outputs/energy_legend_v2.pdf')
-
-
-save_v2_figs()
-save_combined_fig_total(small_total, large_total, 'outputs/energy_saving_combined_total.pdf')
-save_combined_fig_refresh(small_refresh, large_refresh, 'outputs/energy_saving_combined_refresh.pdf')
+if NORMALIZED:
+    _ymax = 0.75
+save_panel(large_refresh, f'outputs/energy_{_suffix}_datacenter_refresh_legend.pdf', 'refresh', _ymax, NORMALIZED,legend=True)
+save_panel(small_refresh, f'outputs/energy_{_suffix}_edge_refresh_legend.pdf',       'refresh', _ymax, NORMALIZED,legend=True)
