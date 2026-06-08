@@ -1,12 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Grouped bar chart: accelerator performance breakdown (Large & Edge).
-Style mirrors energy.py: color = precision, bar style = cycle component.
-Each DNN group has 3 precision clusters (fp16, bf16, fp8); within each
-cluster 3 adjacent bars show data movement (solid), stall (///), and
-systolic execution (xxx), all normalised to baseline total cycles.
-"""
-
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
@@ -29,136 +20,149 @@ if Path(_FONT_PATH).exists():
 else:
     _FONT_NAME = 'DejaVu Sans'
 
-# ── Raw data: [total, compute, stall] summed across all layers ────────────────
-# Layout: array shape (n_dnns, 3) — dnn order: LLaMA, OPT, ResNet
-
-# OPT large-scale uses the valid dim-aware rerun. The older
-# sweep_results/opt_dimaware/ run is diagnostic-only because it reused
-# fixed-layout R2 traces with a dim-aware layout.
 OPT_LARGE_SOURCE = (
     '/gem5/SCALE-SIMv3_Ramulator2/SCALE-Sim/'
-    'sweep_results/opt_dimaware_valid/opt_tpuv5/'
+    'sweep_results/scaleaware_memory_wall_main/opt_sa256_ch16/opt_tpuv5/'
     'cycle_breakdown_summary_vs_config_opt_tpuv5.csv'
 )
-OPT_LARGE_BASE = [1568320, 1417990, 625635]
-OPT_LARGE_FP16 = [1372191, 1256010, 463655]
-OPT_LARGE_BF16 = [1366210, 1249197, 456842]
-OPT_LARGE_FP8 = [1366069, 1248945, 456590]
-
-OPT_EDGE_SOURCE = (
-    '/gem5/SCALE-SIMv3_Ramulator2/SCALE-Sim/'
-    'sweep_results/opt_dimaware_valid/opt_small/'
-    'cycle_breakdown_summary_vs_config_opt_small.csv'
-)
-OPT_EDGE_BASE = [23450771, 23388376, 21021]
-OPT_EDGE_FP16 = [23414109, 23374123, 6768]
-# TODO: replace after opt_small bf16/fp8 dim-aware rerun completes.
-OPT_EDGE_BF16 = [np.nan, np.nan, np.nan]
-OPT_EDGE_FP8 = [np.nan, np.nan, np.nan]
-
-
-# ResNet50 uses the valid dim-aware rerun generated from layouts/resnet_dimaware.csv.
-RESNET_SOURCE = (
-    '/gem5/SCALE-SIMv3_Ramulator2/SCALE-Sim/'
-    'sweep_results/resnet_dimaware_valid/all_cycle_breakdown_summary.csv'
-)
-RESNET_EDGE_BASE = [6664393, 6019166, 90311]
-RESNET_EDGE_FP16 = [6371102, 5971221, 42366]
-RESNET_EDGE_BF16 = [6357886, 5957832, 28977]
-RESNET_EDGE_FP8 = [6371509, 5971550, 42695]
-RESNET_LARGE_BASE = [1107098, 517054, 94299]
-RESNET_LARGE_FP16 = [814882, 461549, 38794]
-RESNET_LARGE_BF16 = [802573, 447211, 24456]
-RESNET_LARGE_FP8 = [822144, 468733, 45978]
+OPT_LARGE_BASE = [981811, 806259, 13904]
+OPT_LARGE_FP16 = [943855, 796447, 4092]
 
 large_base = np.array([
-    # llama 3.2-1B
-    [34198+17241+619500+182985+182985,
-     10604+11321+581570+131875+131875,
-     381+1098+254403+50084+50084],
-    # opt-2.7B
-    OPT_LARGE_BASE,
-    # resnet50
-    RESNET_LARGE_BASE,
+    [758729, 519828, 8633],  # LLaMA
+    [981811, 806259, 13904], # OPT baseline only
+    [819235, 484786, 62031], # ResNet
 ], dtype=float)
 
 large_fp16 = np.array([
-    # llama 3.2-1B
-    [29740+12768+567434+148019+148019,
-     10223+11302+529522+110100+110100,
-     0+1079+202355+28309+28309],
-    # opt-2.7B
-    OPT_LARGE_FP16,
-    # resnet50
-    RESNET_LARGE_FP16,
+    [744731, 518570, 7375],
+    [943855, 796447, 4092],
+    [620018, 441863, 19108],
 ], dtype=float)
 
 large_bf16 = np.array([
-    # llama 3.2-1B
-    [29746+12768+567704+148289+148289,
-     10223+11302+529792+110370+110370,
-     0+1079+202625+28579+28579],
-    # opt-2.7B
-    OPT_LARGE_BF16,
-    # resnet50
-    RESNET_LARGE_BF16,
+    [743583, 515381, 4186],
+    [942765, 795351, 2996],
+    [640956, 447907, 25152],
 ], dtype=float)
 
 large_fp8 = np.array([
-    # llama 3.2-1B
-    [29746+12768+567704+148289+148289,
-     10223+11302+529792+110370+110370,
-     0+1079+202625+28579+28579],
-    # opt-2.7B
-    OPT_LARGE_FP8,
-    # resnet50
-    RESNET_LARGE_FP8,
+    [743583, 515381, 4186],
+    [942753, 795339, 2984],
+    [643764, 451219, 28464],
 ], dtype=float)
+
+# large_base = np.array([
+#     # llama 3.2-1B
+#     [34198+17241+619500+182985+182985,
+#      10604+11321+581570+131875+131875,
+#      381+1098+254403+50084+50084],
+#     # opt-2.7B
+#     OPT_LARGE_BASE,
+#     # resnet50
+#     RESNET_LARGE_BASE,
+# ], dtype=float)
+
+# large_fp16 = np.array([
+#     # llama 3.2-1B
+#     [29740+12768+567434+148019+148019,
+#      10223+11302+529522+110100+110100,
+#      0+1079+202355+28309+28309],
+#     # opt-2.7B
+#     OPT_LARGE_FP16,
+#     # resnet50
+#     RESNET_LARGE_FP16,
+# ], dtype=float)
+
+# large_bf16 = np.array([
+#     # llama 3.2-1B
+#     [29746+12768+567704+148289+148289,
+#      10223+11302+529792+110370+110370,
+#      0+1079+202625+28579+28579],
+#     # opt-2.7B
+#     OPT_LARGE_BF16,
+#     # resnet50
+#     RESNET_LARGE_BF16,
+# ], dtype=float)
+
+# large_fp8 = np.array([
+#     # llama 3.2-1B
+#     [29746+12768+567704+148289+148289,
+#      10223+11302+529792+110370+110370,
+#      0+1079+202625+28579+28579],
+#     # opt-2.7B
+#     OPT_LARGE_FP8,
+#     # resnet50
+#     RESNET_LARGE_FP8,
+# ], dtype=float)
 
 # Edge-device config
 edge_base = np.array([
-    # llama 3.2-1B
-    [54373+49425+9944361+2497555+2497555,
-     39420+39881+9929597+2483069+2483069,
-     637+1098+894+894+894],
-    # opt-2.7B
-    OPT_EDGE_BASE,
-    # resnet50
-    RESNET_EDGE_BASE,
+    [6939647, 6464200, 2106189],   # LLaMA
+    [10751025, 10249675, 3454320], # OPT
+    [4491231, 2193445, 155160],    # ResNet
 ], dtype=float)
 
 edge_fp16 = np.array([
-    # llama 3.2-1B
-    [49050+45151+9940172+2493651+2493651,
-     38783+39862+9930011+2483483+2483483,
-     0+1079+1308+1308+1308],
-    # opt-2.7B
-    OPT_EDGE_FP16,
-    # resnet50
-    RESNET_EDGE_FP16,
+    [6866191, 6399639, 2041628],
+    [10678439, 10185726, 3390371],
+    [4132823, 2070291, 32006],
 ], dtype=float)
 
 edge_bf16 = np.array([
-    # llama 3.2-1B
-    [49055+45151+9940172+2493651+2493651,
-     38783+39862+9930011+2483483+2483483,
-     0+1079+1308+1308+1308],
-    # opt-2.7B
-    OPT_EDGE_BF16,
-    # resnet50
-    RESNET_EDGE_BF16,
+    [6901982, 6435336, 2077325],
+    [10675419, 10182649, 3387294],
+    [4120521, 2058027, 19742],
 ], dtype=float)
 
 edge_fp8 = np.array([
-    # llama 3.2-1B
-    [49056+45151+9940172+2493651+2493651,
-     38783+39862+9930011+2483483+2483483,
-     0+1079+1308+1308+1308],
-    # opt-2.7B
-    OPT_EDGE_FP8,
-    # resnet50
-    RESNET_EDGE_FP8,
+    [6911926, 6438906, 2080895],
+    [10681696, 10188814, 3393459],
+    [4166872, 2104299, 66014],
 ], dtype=float)
+# edge_base = np.array([
+#     # llama 3.2-1B
+#     [54373+49425+9944361+2497555+2497555,
+#      39420+39881+9929597+2483069+2483069,
+#      637+1098+894+894+894],
+#     # opt-2.7B
+#     OPT_EDGE_BASE,
+#     # resnet50
+#     RESNET_EDGE_BASE,
+# ], dtype=float)
+
+# edge_fp16 = np.array([
+#     # llama 3.2-1B
+#     [49050+45151+9940172+2493651+2493651,
+#      38783+39862+9930011+2483483+2483483,
+#      0+1079+1308+1308+1308],
+#     # opt-2.7B
+#     OPT_EDGE_FP16,
+#     # resnet50
+#     RESNET_EDGE_FP16,
+# ], dtype=float)
+
+# edge_bf16 = np.array([
+#     # llama 3.2-1B
+#     [49055+45151+9940172+2493651+2493651,
+#      38783+39862+9930011+2483483+2483483,
+#      0+1079+1308+1308+1308],
+#     # opt-2.7B
+#     OPT_EDGE_BF16,
+#     # resnet50
+#     RESNET_EDGE_BF16,
+# ], dtype=float)
+
+# edge_fp8 = np.array([
+#     # llama 3.2-1B
+#     [49056+45151+9940172+2493651+2493651,
+#      38783+39862+9930011+2483483+2483483,
+#      0+1079+1308+1308+1308],
+#     # opt-2.7B
+#     OPT_EDGE_FP8,
+#     # resnet50
+#     RESNET_EDGE_FP8,
+# ], dtype=float)
 
 
 # ── Decompose helper ──────────────────────────────────────────────────────────
@@ -241,7 +245,7 @@ def draw_subfigure(ax, base, fp16_raw, bf16_raw, fp8_raw):
                color=COLOR_ST, edgecolor='black', linewidth=0.8, zorder=5)
         ax.bar(xpos, dm, BW, bottom=sy + st,
                color=COLOR_DM, edgecolor='black', linewidth=0.8, zorder=5)
-
+    
         totals = dm + st + sy
         for xi, t in zip(xpos, totals):
             if not np.isfinite(t):
@@ -250,10 +254,10 @@ def draw_subfigure(ax, base, fp16_raw, bf16_raw, fp8_raw):
                         zorder=4)
                 continue
             # precision label just below x-axis tick area, rotated
-            ax.text(xi, -0.02, prec,
+            ax.text(xi, -0.015, prec,
                     ha='center', va='top', fontsize=10, rotation=45,
                     transform=ax.get_xaxis_transform(), zorder=4)
-            ax.text(xi, t + 0.008, f'{t:.2f}',
+            ax.text(xi, t + 0.008, f'{t:.3f}',
                     ha='center', va='bottom', fontsize=10, rotation=90, zorder=4)
 
     ax.set_xticks(x)
@@ -279,13 +283,16 @@ def make_legend():
 def save_fig(base, fp16_raw, bf16_raw, fp8_raw, out_path, top_pad=0.08):
     totals = np.concatenate([r[:, 0] / base[:, 0]
                              for r in [fp16_raw, bf16_raw, fp8_raw]])
-    fig, ax = plt.subplots(figsize=(5.5, 3))
+    fig, ax = plt.subplots(figsize=(6,3))
     draw_subfigure(ax, base, fp16_raw, bf16_raw, fp8_raw)
+    fig.legend(handles=make_legend(), loc='center', ncol=3, frameon=False,
+               bbox_to_anchor=(0.5, 1.05))
     ymax = max(1.06, totals.max() + top_pad)
     ax.set_ylim(0, ymax)
     ax.set_yticks([0.00, 0.25, 0.50, 0.75, 1.00])
     fig.tight_layout(pad=0.5)
     fig.savefig(out_path, bbox_inches='tight')
+    
     plt.close(fig)
     print(f'Saved {out_path}')
 
@@ -330,10 +337,10 @@ def save_combined_fig():
     print('Saved outputs/accel_perf_combined.pdf')
 
 # ── Generate figures ──────────────────────────────────────────────────────────
-save_legend('outputs/accel_perf_legend.pdf')
+#save_legend('outputs/accel_perf_legend.pdf')
 save_fig(large_base, large_fp16, large_bf16, large_fp8, 'outputs/accel_perf_large.pdf',top_pad=0.4)
 save_fig(edge_base,  edge_fp16,  edge_bf16,  edge_fp8,  'outputs/accel_perf_edge.pdf', top_pad=0.4)
 
 
 # -- Generate combined figure --------------------------------------------------
-save_combined_fig()
+#save_combined_fig()
