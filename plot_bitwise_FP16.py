@@ -58,7 +58,7 @@ METRIC_DEFAULTS = {
 }
 import matplotlib.font_manager as fm
 # ── 폰트 등록  ──────────────────────────────────────────────────────────
-ARIAL_NARROW_BOLD = '/home/wing02/arialnarrow_bold.ttf'
+ARIAL_NARROW_BOLD = 'arialnarrow_bold.ttf'
 fm.fontManager.addfont(ARIAL_NARROW_BOLD)
 _font_prop = fm.FontProperties(fname=ARIAL_NARROW_BOLD)
 

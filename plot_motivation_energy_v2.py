@@ -229,8 +229,8 @@ def draw_energy(ax):
     ax.set_yticks(range(0, 101, 20))
     ax.set_yticklabels([f'{y}%' for y in range(0, 101, 20)], fontsize=9)
     ax.set_ylim(0, 100)
-    ax.set_ylabel('Proportion (%) of\nActive Energy', fontweight='bold')
-    ax.set_xlabel('Density', fontweight='bold')
+    ax.set_ylabel('Active Energy (%)', fontweight='bold')
+    ax.set_xlabel('Die density', fontweight='bold')
 
     
     ax.set_xticks(list(x))
@@ -238,8 +238,17 @@ def draw_energy(ax):
     ax.set_yticks(range(0, 101, 20))
     ax.set_yticklabels([f'{y}%' for y in range(0, 101, 20)], fontsize=9)
     ax.set_ylim(0, 100)
-    ax.set_ylabel('Proportion (%) of\nActive Energy', fontweight='bold')
-    ax.set_xlabel('Density', fontweight='bold')
+    ax.set_ylabel('Active Energy (%)', fontweight='bold')
+    ax.set_xlabel('Die density', fontweight='bold')
+
+    
+    ax.set_xticks(list(x))
+    ax.set_xticklabels(densities, fontweight='bold',fontsize=9)
+    ax.set_yticks(range(0, 101, 20))
+    ax.set_yticklabels([f'{y}%' for y in range(0, 101, 20)], fontsize=9)
+    ax.set_ylim(0, 100)
+    ax.set_ylabel('Active Energy (%)', fontweight='bold')
+    ax.set_xlabel('Die density', fontweight='bold')
     
     # 테두리 정리
     ax.spines['top'].set_visible(False)
@@ -307,7 +316,7 @@ def draw_bitwise(ax, model=DEFAULT_MODEL, metric=DEFAULT_METRIC,
         elif math.isinf(pct) or pct >= 1e6:
             ax.bar(xi, cap_h, width=0.58, color='#3E2E5E', alpha=0.78,
                    edgecolor="black", lw=1, zorder=3)
-            ax.text(xi, cap_h * 0.01, ">100x", ha="center", va="bottom",
+            ax.text(xi, cap_h * 0.005, ">100x", ha="center", va="bottom",
                     color="white", fontsize=11, fontweight="bold", rotation=90, zorder=6)
         else:
             ax.bar(xi, pct, width=0.58, color='#3E2E5E', alpha=0.78,
@@ -346,6 +355,204 @@ def draw_bitwise(ax, model=DEFAULT_MODEL, metric=DEFAULT_METRIC,
     ax.axhline(0.0, color="black", linewidth=0.8, linestyle="--", zorder=7)
     return ax
 
+
+def draw_bitwise_2(ax, model=DEFAULT_MODEL, metric=DEFAULT_METRIC,
+                   csv_path=None, trefi_list=None):
+    """Bitwise worst-case bars with explicit FP16 field annotations."""
+    if trefi_list is None: trefi_list = DEFAULT_TREFI
+    if csv_path   is None: csv_path   = default_csv(model, metric)
+
+    rows      = as_bar_rows(load_metric_rows(csv_path, model, metric))
+    baseline  = resolve_baseline(model, metric, rows)
+    raw, _    = build_maps(rows)
+    trefi_sub = [t for t in trefi_list if t in raw] or sorted(raw)
+
+    bits_x = list(range(15, -1, -1))
+    x      = np.arange(len(bits_x))
+    # field_color = {
+    #     "sign": "#C00000",
+    #     "exponent": "#ED7D31",
+    #     "mantissa": "#1565c0",
+    # }
+    field_color = {
+        "sign": "#3E2E5E",
+        "exponent": "#3E2E5E",
+        "mantissa": "#3E2E5E",
+    }
+    field_bg = {
+        "sign": "#FFFFFF",
+        "exponent": "#FFFFFF",
+        "mantissa": "#FFFFFF",
+    }
+
+    worst, nan_cnt = {}, {}
+    for b in bits_x:
+        vals, nc = [], 0
+        for t in trefi_sub:
+            d = metric_delta_pct(raw[t].get(b), baseline, metric)
+            if d is None or math.isnan(d): nc += 1
+            else: vals.append(1e9 if math.isinf(d) else max(d, 0.0))
+        worst[b]   = max(vals) if vals else math.nan
+        nan_cnt[b] = nc
+
+    cap_h = 1e4
+
+    # FP16 field regions: bit15 sign, bits14-10 exponent, bits9-0 mantissa.
+    field_spans = [
+        (-0.5, 0.5, "Sign", field_color["sign"], field_bg["sign"]),
+        (0.5, 5.5, "Exponent", field_color["exponent"], field_bg["exponent"]),
+        (5.5, 15.5, "Mantissa", field_color["mantissa"], field_bg["mantissa"]),
+    ]
+    ax.axvspan(-0.5,  0.5, alpha=0.05, color='#000000' , zorder=0)
+    ax.axvspan( 0.5,  5.5, alpha=0.05, color='#000000' , zorder=0)
+    ax.axvspan( 5.5, 15.5, alpha=0.05, color='#000000' , zorder=0)
+
+    for xi, b in enumerate(bits_x):
+        pct = worst[b]
+        if math.isnan(pct):
+            ax.bar(xi, cap_h, width=0.58, color='#3E2E5E', alpha=0.72,
+                   edgecolor="black", lw=0.8, zorder=3)
+            ax.text(xi, cap_h * 0.01, "NaN", ha="center", va="bottom",
+                    color="white", fontsize=10, fontweight="bold", rotation=90, zorder=6)
+        elif math.isinf(pct) or pct >= 1e6:
+            ax.bar(xi, cap_h, width=0.58, color='#3E2E5E', alpha=0.78,
+                   edgecolor="black", lw=0.8, zorder=3)
+            ax.text(xi, cap_h * 0.005, ">100x", ha="center", va="bottom",
+                    color="white", fontsize=10, fontweight="bold", rotation=90, zorder=6)
+        else:
+            ax.bar(xi, pct, width=0.58, color='#3E2E5E', alpha=0.78,
+                   edgecolor="black", lw=0.8, zorder=3)
+
+    ax.set_yscale("symlog", linthresh=0.1)
+    ax.set_ylim(bottom=0, top=cap_h)
+    ax.set_xticks(x);  ax.set_xticklabels([str(b) for b in bits_x], fontsize=11)
+    ax.set_xlim(-0.6, len(bits_x) - 0.4)
+    ax.set_xlabel("FP16 Bit Index", fontweight='bold', labelpad=3)
+    ax.set_ylabel("PPL Increase (%)", fontweight='bold', labelpad=3)
+    ax.grid(axis="y", which="both", linestyle=":", alpha=0.65, zorder=2)
+    ax.axhline(0.0, color="black", linewidth=0.8, linestyle="--", zorder=7)
+
+    # Put field names above the plotting area so labels stay readable on
+    # log-scale bars and do not collide with data.
+    trans = ax.get_xaxis_transform()
+    for left, right, label, color, _ in field_spans:
+        cx = (left + right) / 2
+        ax.text(cx, 1.055, label, transform=trans, ha="center", va="bottom",
+                fontsize=11, fontweight="bold", color=color, clip_on=False)
+        ax.plot([left + 0.06, right - 0.06], [1.035, 1.035], transform=trans,
+                color=color, linewidth=1.6, solid_capstyle="round", clip_on=False)
+
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    return ax
+
+
+
+def draw_bitwise_3(ax, model=DEFAULT_MODEL, metric=DEFAULT_METRIC,
+                   csv_path=None, trefi_list=None):
+    """Bitwise worst-case bars with explicit FP16 field annotations."""
+    if trefi_list is None: trefi_list = DEFAULT_TREFI
+    if csv_path   is None: csv_path   = default_csv(model, metric)
+
+    rows      = as_bar_rows(load_metric_rows(csv_path, model, metric))
+    baseline  = resolve_baseline(model, metric, rows)
+    raw, _    = build_maps(rows)
+    trefi_sub = [t for t in trefi_list if t in raw] or sorted(raw)
+
+    bits_x = list(range(15, -1, -1))
+    x      = np.arange(len(bits_x))
+    # field_color = {
+    #     "sign": "#C00000",
+    #     "exponent": "#ED7D31",
+    #     "mantissa": "#1565c0",
+    # }
+    # field_color = {
+    #     "sign": "#3E2E5E",
+    #     "exponent": "#8B5E8C",
+    #     "mantissa": "#D4A0B0",
+    # }
+    field_color = {
+        "sign": "#3E2E5E",
+        "exponent": "#8B5E8C",
+        "mantissa": "#D4A0B0",
+    }
+    def get_field(bit):
+        if bit == 15:        return "sign"
+        if 10 <= bit <= 14:  return "exponent"
+        return "mantissa"
+
+    def get_bar_color(bit):
+        return field_color[get_field(bit)]
+    field_bg = {
+        "sign": "#FFFFFF",
+        "exponent": "#FFFFFF",
+        "mantissa": "#FFFFFF",
+    }
+
+    worst, nan_cnt = {}, {}
+    for b in bits_x:
+        vals, nc = [], 0
+        for t in trefi_sub:
+            d = metric_delta_pct(raw[t].get(b), baseline, metric)
+            if d is None or math.isnan(d): nc += 1
+            else: vals.append(1e9 if math.isinf(d) else max(d, 0.0))
+        worst[b]   = max(vals) if vals else math.nan
+        nan_cnt[b] = nc
+
+    cap_h = 1e4
+
+    # FP16 field regions: bit15 sign, bits14-10 exponent, bits9-0 mantissa.
+    field_spans = [
+        (-0.5, 0.5, "Sign", field_color["sign"], field_bg["sign"]),
+        (0.5, 5.5, "Exponent", field_color["exponent"], field_bg["exponent"]),
+        (5.5, 15.5, "Mantissa", field_color["mantissa"], field_bg["mantissa"]),
+    ]
+    ax.axvspan(-0.5,  0.5, alpha=0.05, color='#000000' , zorder=0)
+    ax.axvspan( 0.5,  5.5, alpha=0.05, color='#000000' , zorder=0)
+    ax.axvspan( 5.5, 15.5, alpha=0.05, color='#000000' , zorder=0)
+
+    for xi, b in enumerate(bits_x):
+        pct = worst[b]
+        if math.isnan(pct):
+            ax.bar(xi, cap_h, width=0.58, color=get_bar_color(b), alpha=0.72,
+                   edgecolor="black", lw=0.8, zorder=3)
+            ax.text(xi, cap_h * 0.01, "NaN", ha="center", va="bottom",
+                    color="white", fontsize=10, fontweight="bold", rotation=90, zorder=6)
+        elif math.isinf(pct) or pct >= 1e6:
+            ax.bar(xi, cap_h, width=0.58, color=get_bar_color(b), alpha=0.78,
+                   edgecolor="black", lw=0.8, zorder=3)
+            ax.text(xi, cap_h * 0.005, ">100x", ha="center", va="bottom",
+                    color="white", fontsize=10, fontweight="bold", rotation=90, zorder=6)
+        else:
+            ax.bar(xi, pct, width=0.58, color=get_bar_color(b), alpha=0.78,
+                   edgecolor="black", lw=0.8, zorder=3)
+
+    ax.set_yscale("symlog", linthresh=0.1)
+    ax.set_ylim(bottom=0, top=cap_h)
+    ax.set_xticks(x);  ax.set_xticklabels([str(b) for b in bits_x], fontsize=11)
+    ax.set_xlim(-0.6, len(bits_x) - 0.4)
+    ax.set_xlabel("FP16 Bit Index", fontweight='bold', labelpad=3)
+    ax.set_ylabel("PPL Increase (%)", fontweight='bold', labelpad=3)
+    ax.grid(axis="y", which="both", linestyle=":", alpha=0.65, zorder=2)
+    ax.axhline(0.0, color="black", linewidth=0.8, linestyle="--", zorder=7)
+
+    # Put field names above the plotting area so labels stay readable on
+    # log-scale bars and do not collide with data.
+    trans = ax.get_xaxis_transform()
+    for left, right, label, color, _ in field_spans:
+        cx = (left + right) / 2
+        ax.text(cx, 1.055, label, transform=trans, ha="center", va="bottom",
+                fontsize=11, fontweight="bold", color=color, clip_on=False)
+        ax.plot([left + 0.06, right - 0.06], [1.035, 1.035], transform=trans,
+                color=color, linewidth=1.6, solid_capstyle="round", clip_on=False)
+
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    return ax
+
+
+
+
 # ── Main: save individual + combined ─────────────────────────────────────────
 
 def main(model=DEFAULT_MODEL, metric=DEFAULT_METRIC,
@@ -355,11 +562,31 @@ def main(model=DEFAULT_MODEL, metric=DEFAULT_METRIC,
     trefi_list = trefi_list or DEFAULT_TREFI
 
     # ── 1. Energy standalone ──────────────────────────────────────────────────
-    fig_e, ax_e = plt.subplots(figsize=(4, 2))
+    fig_e, ax_e = plt.subplots(figsize=(5, 2))
     draw_energy(ax_e)
     fig_e.tight_layout()
     save_fig(fig_e, OUT / "fig_energy.png")
     plt.close(fig_e)
+
+    # ── 2. Bitwise standalone ────────────────────────────────────────────────
+    fig_b, ax_b = plt.subplots(figsize=(5.5, 2.5))
+    draw_bitwise(ax_b, model=model, metric=metric, csv_path=csv_path, trefi_list=trefi_list)
+    fig_b.tight_layout()
+    save_fig(fig_b, OUT / "fig_bitwise.png")
+    save_fig(fig_b, OUT / "fig_bitwise.pdf")
+    plt.close(fig_b) 
+
+    fig_b, ax_b = plt.subplots(figsize=(5.5, 2.5))
+    draw_bitwise_2(ax_b, model=model, metric=metric, csv_path=csv_path, trefi_list=trefi_list)
+    fig_b.tight_layout()
+    save_fig(fig_b, OUT / "fig_bitwise_2.png")
+    save_fig(fig_b, OUT / "fig_bitwise_2.pdf")
+    plt.close(fig_b)
+
+
+
+    # comment \gunjae{Font size is too small. Use arial narrow with bold. 
+    # It would be better if we can indicate sign, exponent, and mantissa fields on the graph}   
 
 
 

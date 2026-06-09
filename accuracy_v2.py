@@ -10,7 +10,7 @@ import warnings
 warnings.filterwarnings('ignore')
 import os
 
-ARIAL_NARROW_BOLD = '/home/wing02/.fonts/arialnarrow_bold.ttf'
+ARIAL_NARROW_BOLD = 'arialnarrow_bold.ttf'
 
 fm.fontManager.addfont(ARIAL_NARROW_BOLD)
 font_prop = fm.FontProperties(fname=ARIAL_NARROW_BOLD)
@@ -756,7 +756,7 @@ _build_figure(
         ),
 
     ],
-    outfile=os.path.join(OUT, 'accuracy_heatmap_1.pdf'),
+    outfile=os.path.join(OUT, 'accuracy_heatmap_1.png'),
 )
 
 _build_figure(
@@ -811,7 +811,7 @@ _build_figure(
             height=resnet_h, title='Resnet50', is_ppl=False, bottom_labels=True, show_nan_band=False,
         ),
     ],
-    outfile=os.path.join(OUT, 'accuracy_heatmap_3.pdf'),
+    outfile=os.path.join(OUT, 'accuracy_heatmap_3.png'),
 )
 
 

@@ -276,7 +276,7 @@ def make_legend():
     return [
         plt.Rectangle((0,0), 1, 1, fc=COLOR_SY, ec='none', label='systolic compute'),
         plt.Rectangle((0,0), 1, 1, fc=COLOR_ST, ec='none', label='stall'),
-        plt.Rectangle((0,0), 1, 1, fc=COLOR_DM, ec='none', label='prefetch + drain'),
+        plt.Rectangle((0,0), 1, 1, fc=COLOR_DM, ec='none', label='data staging'),
     ]
 
 

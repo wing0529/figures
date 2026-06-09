@@ -10,6 +10,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import os
+import csv
 import matplotlib.font_manager as fm
 from pathlib import Path
 
@@ -18,18 +19,60 @@ os.chdir(script_dir)
 os.makedirs('outputs', exist_ok=True)
 
 
-# ── Data  (baseline_cycles / config_cycles) ── placeholder ───────────────────
-# Large-scale config
-large_dnns   = ['Llama 3.2-1B', 'OPT-2.7B', 'Resnet50']
-large_FP16   = np.array([1.1409, 1.1412, 1.1372])
-large_FP8    = np.array([1.0772, 1.0774, 1.1371])
-large_BF16   = np.array([1.0772, 1.0774, 1.0831])
+SIM_ROOT = Path(__file__).resolve().parents[1] / 'SCALE-SIMv3_Ramulator2' / 'SCALE-Sim'
+WORKLOAD_LABELS = ['Llama 3.2-1B', 'OPT-2.7B', 'Resnet50']
+MODEL_ORDER = ['llama', 'opt', 'resnet']
 
-# Edge-device config
-edge_dnns    = ['Llama 3.2-1B', 'OPT-2.7B', 'Resnet50']
-edge_FP16    = np.array([1.1391, 1.1385, 1.1387])
-edge_FP8     = np.array([1.0756, 1.0750, 1.1384])
-edge_BF16    = np.array([1.0756, 1.0750, 1.0837])
+
+def load_speedups(csv_path, variant, fallback):
+    """Return workload labels and speedup arrays from evaluate_workloads*.py CSV."""
+    if not csv_path.exists():
+        print(f'Using fallback throughput data: {csv_path} not found')
+        return fallback
+
+    rows = {}
+    with csv_path.open(newline='') as f:
+        for row in csv.DictReader(f):
+            rows[(row['workload'], row['config'])] = float(row['cycles'])
+
+    values = {}
+    for config in ['fp16', 'bf16', 'fp8']:
+        speedups = []
+        for model in MODEL_ORDER:
+            workload = f'{model}_{variant}'
+            base = rows[(workload, 'baseline')]
+            cycles = rows[(workload, config)]
+            speedups.append(base / cycles)
+        values[config] = np.array(speedups)
+
+    print(f'Loaded throughput data from {csv_path}')
+    return WORKLOAD_LABELS, values['fp16'], values['bf16'], values['fp8']
+
+
+# ── Data  (baseline_cycles / config_cycles) ──────────────────────────────────
+large_fallback = (
+    WORKLOAD_LABELS,
+    np.array([1.1409, 1.1412, 1.1372]),
+    np.array([1.0772, 1.0774, 1.0831]),
+    np.array([1.0772, 1.0774, 1.1371]),
+)
+edge_fallback = (
+    WORKLOAD_LABELS,
+    np.array([1.1391, 1.1385, 1.1387]),
+    np.array([1.0756, 1.0750, 1.0837]),
+    np.array([1.0756, 1.0750, 1.1384]),
+)
+
+large_dnns, large_FP16, large_BF16, large_FP8 = load_speedups(
+    SIM_ROOT / 'workload_config_results_sa256_ch16_seq.csv',
+    'server',
+    large_fallback,
+)
+edge_dnns, edge_FP16, edge_BF16, edge_FP8 = load_speedups(
+    SIM_ROOT / 'workload_config_results_sa64_ch1_seq.csv',
+    'edge',
+    edge_fallback,
+)
 
 
 
@@ -140,6 +183,7 @@ fig2.legend(handles=legend_patches(), loc='upper center',
             ncol=4, frameon=False, bbox_to_anchor=(0.5, 1.06))
 fig2.tight_layout(pad=0.5, rect=[0, 0.08, 1, 1])
 fig2.savefig('outputs/throughput_edge.pdf', bbox_inches='tight')
+fig2.savefig('outputs/throughput_edge.png', bbox_inches='tight')
 plt.close(fig2)
 
 # ── Combined figure (large + edge side by side) ───────────────────────────────
@@ -165,3 +209,106 @@ plt.close(fig2)
 # print('Saved outputs/throughput_combined.pdf')
 
 # print('Saved outputs/throughput_large.pdf and outputs/throughput_edge.pdf and Saved outputs/throughput_combined.pdf')
+
+
+'''
+sa54_ch1_seq.csv 결과:
+========================================================================
+  RESULTS: DRAM Cycles
+========================================================================
+Workload                      baseline              fp16               fp8              bf16
+--------------------------------------------------------------------------------------------
+llama_edge               2,238,478,238     1,959,629,801     2,075,689,170     2,075,689,170
+opt_edge                 6,546,243,908     5,730,055,473     6,069,545,094     6,069,545,094
+resnet_edge                317,342,812       279,419,983       295,439,354       295,439,354
+
+========================================================================
+  RESULTS: Throughput Improvement vs. Baseline  (baseline_cycles / config_cycles)
+========================================================================
+Workload                          fp16               fp8              bf16
+--------------------------------------------------------------------------
+llama_edge                      1.1423x            1.0784x            1.0784x
+opt_edge                        1.1424x            1.0785x            1.0785x
+resnet_edge                     1.1357x            1.0741x            1.0741x
+
+========================================================================
+  RESULTS: Total Energy (nJ)
+========================================================================
+Workload                      baseline              fp16               fp8              bf16
+--------------------------------------------------------------------------------------------
+llama_edge              327,210,435.82    272,976,108.93    293,529,058.09    293,529,058.09
+opt_edge                961,820,960.65    802,938,597.13    863,055,661.01    863,055,661.01
+resnet_edge              46,194,722.08     38,885,940.50     41,729,891.98     41,729,891.98
+
+========================================================================
+  RESULTS: Energy Saving vs. Baseline (%)
+========================================================================
+Workload                          fp16               fp8              bf16
+--------------------------------------------------------------------------
+llama_edge                      16.57%            10.29%            10.29%
+opt_edge                        16.52%            10.27%            10.27%
+resnet_edge                     15.82%             9.67%             9.67%
+
+========================================================================
+  RESULTS: Refresh Energy Saving vs. Baseline (%)
+========================================================================
+Workload                          fp16               fp8              bf16
+--------------------------------------------------------------------------
+llama_edge                      66.84%            41.82%            41.82%
+opt_edge                        66.82%            41.81%            41.81%
+resnet_edge                     66.41%            41.21%            41.21%
+
+Raw results saved to: /gem5/SCALE-SIMv3_Ramulator2/SCALE-Sim/workload_config_results_sa64_ch1_seq.csv
+========================================================================
+root@ccecfbe77b40:/gem5/SCALE-SIMv3_Ramulator2/SCALE-Sim# 
+
+========================================================================
+  RESULTS: DRAM Cycles
+========================================================================
+Workload                      baseline              fp16               fp8              bf16
+--------------------------------------------------------------------------------------------
+llama_server               504,552,167     1,481,159,150     1,568,793,958     1,568,793,958
+opt_server               1,467,684,592     4,330,760,742     4,587,050,846     4,587,050,846
+resnet_server               70,306,273       211,395,963       223,348,866       223,348,866
+
+========================================================================
+  RESULTS: Throughput Improvement vs. Baseline  (baseline_cycles / config_cycles)
+========================================================================
+Workload                          fp16               fp8              bf16
+--------------------------------------------------------------------------
+llama_server                    0.3406x            0.3216x            0.3216x
+opt_server                      0.3389x            0.3200x            0.3200x
+resnet_server                   0.3326x            0.3148x            0.3148x
+
+========================================================================
+  RESULTS: Total Energy (nJ)
+========================================================================
+Workload                      baseline              fp16               fp8              bf16
+--------------------------------------------------------------------------------------------
+llama_server            575,284,367.83    735,369,845.32    983,876,147.26    983,876,147.26
+opt_server            1,685,939,512.65  2,157,290,612.44  2,884,003,236.86  2,884,003,236.86
+resnet_server            75,495,664.95    103,706,123.03    137,684,328.47    137,684,328.47
+
+========================================================================
+  RESULTS: Energy Saving vs. Baseline (%)
+========================================================================
+Workload                          fp16               fp8              bf16
+--------------------------------------------------------------------------
+llama_server                   -27.83%           -71.02%           -71.02%
+opt_server                     -27.96%           -71.06%           -71.06%
+resnet_server                  -37.37%           -82.37%           -82.37%
+
+========================================================================
+  RESULTS: Refresh Energy Saving vs. Baseline (%)
+========================================================================
+Workload                          fp16               fp8              bf16
+--------------------------------------------------------------------------
+llama_server                   -12.25%           -97.10%           -97.10%
+opt_server                     -12.54%           -97.41%           -97.41%
+resnet_server                  -29.75%          -126.35%          -126.35%
+
+Raw results saved to: /gem5/SCALE-SIMv3_Ramulator2/SCALE-Sim/workload_config_results_sa256_ch16_seq.csv
+========================================================================
+root@ccecfbe77b40:/gem5/SCALE-SIMv3_Ramulator2/SCALE-Sim# 
+
+'''

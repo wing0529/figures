@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Grouped bar chart: normalized DRAM energy relative to baseline.
-Two separate output groups are emitted for edge-device and datacenter-scale runs.
-For each workload x precision pair, total energy and refresh energy can be
-plotted as separate panels or side by side.
+Grouped bar chart: Energy saving vs. baseline (%).
+Two separate output files: energy_saving_small.pdf and energy_saving_large.pdf.
+For each workload x precision pair the total energy bar and the
+refresh energy bar are placed side by side.
 """
 
 import numpy as np
@@ -11,7 +11,6 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import os
-import csv
 import matplotlib.font_manager as fm
 from pathlib import Path
 
@@ -27,87 +26,29 @@ if Path(_FONT_PATH).exists():
 
 
 # -- Data ----------------------------------------------------------------------
-SIM_ROOT = Path(__file__).resolve().parents[1] / 'SCALE-SIMv3_Ramulator2' / 'SCALE-Sim'
 DNNS       = ['Llama 3.2-1B', 'OPT-2.7B', 'Resnet50']
 PRECISIONS = ['FP16', 'BF16', 'FP8']
-MODEL_ORDER = ['llama', 'opt', 'resnet']
-CONFIG_FOR_PREC = {'FP16': 'fp16', 'BF16': 'bf16', 'FP8': 'fp8'}
 
+small_total   = {'FP16': np.array([16.97, 15.94, 18.44]),
+                 'BF16': np.array([ 9.47,  8.44, 11.55]),
+                 'FP8':  np.array([ 9.47,  8.44, 18.41])}
 
-def savings_to_normalized(data):
-    return {prec: 1.0 - values / 100.0 for prec, values in data.items()}
+large_total   = {'FP16': np.array([16.05, 16.16, 16.35]),
+                 'BF16': np.array([ 9.84,  9.88, 10.18]),
+                 'FP8':  np.array([ 9.84,  9.88, 16.34])}
 
+small_refresh = {'FP16': np.array([66.66, 66.64, 66.82]),
+                 'BF16': np.array([41.63, 41.59, 42.06]),
+                 'FP8':  np.array([41.63, 41.59, 66.69])}
 
-def load_normalized_energy(csv_path, variant, fallback_total, fallback_refresh):
-    """Return total/ref normalized energy from evaluate_workloads*.py CSV."""
-    if not csv_path.exists():
-        print(f'Using fallback normalized DRAM energy data: {csv_path} not found')
-        return fallback_total, fallback_refresh
-
-    rows = {}
-    with csv_path.open(newline='') as f:
-        for row in csv.DictReader(f):
-            rows[(row['workload'], row['config'])] = {
-                'tot_energy': float(row['tot_energy']),
-                'ref_energy': float(row['ref_energy']),
-            }
-
-    total = {}
-    refresh = {}
-    for prec, config in CONFIG_FOR_PREC.items():
-        total_vals = []
-        refresh_vals = []
-        for model in MODEL_ORDER:
-            workload = f'{model}_{variant}'
-            base = rows[(workload, 'baseline')]
-            cur = rows[(workload, config)]
-            total_vals.append(cur['tot_energy'] / base['tot_energy'])
-            refresh_vals.append(cur['ref_energy'] / base['ref_energy'])
-        total[prec] = np.array(total_vals)
-        refresh[prec] = np.array(refresh_vals)
-
-    print(f'Loaded normalized DRAM energy data from {csv_path}')
-    return total, refresh
-
-
-small_total_fallback = savings_to_normalized({
-    'FP16': np.array([16.97, 15.94, 18.44]),
-    'BF16': np.array([ 9.47,  8.44, 11.55]),
-    'FP8':  np.array([ 9.47,  8.44, 18.41]),
-})
-large_total_fallback = savings_to_normalized({
-    'FP16': np.array([16.05, 16.16, 16.35]),
-    'BF16': np.array([ 9.84,  9.88, 10.18]),
-    'FP8':  np.array([ 9.84,  9.88, 16.34]),
-})
-small_refresh_fallback = savings_to_normalized({
-    'FP16': np.array([66.66, 66.64, 66.82]),
-    'BF16': np.array([41.63, 41.59, 42.06]),
-    'FP8':  np.array([41.63, 41.59, 66.69]),
-})
-large_refresh_fallback = savings_to_normalized({
-    'FP16': np.array([66.97, 66.98, 66.53]),
-    'BF16': np.array([41.89, 41.84, 41.74]),
-    'FP8':  np.array([41.89, 41.84, 66.50]),
-})
-
-small_total, small_refresh = load_normalized_energy(
-    SIM_ROOT / 'workload_config_results_sa64_ch1_seq.csv',
-    'edge',
-    small_total_fallback,
-    small_refresh_fallback,
-)
-large_total, large_refresh = load_normalized_energy(
-    SIM_ROOT / 'workload_config_results_sa256_ch16_seq.csv',
-    'server',
-    large_total_fallback,
-    large_refresh_fallback,
-)
+large_refresh = {'FP16': np.array([66.97, 66.98, 66.53]),
+                 'BF16': np.array([41.89, 41.84, 41.74]),
+                 'FP8':  np.array([41.89, 41.84, 66.50])}
 
 
 # -- Mode ----------------------------------------------------------------------
 # True  → Normalized energy (0–1, baseline = 1.0)
-# False → Saved energy (%) computed from normalized energy
+# False → Saved energy (%)
 NORMALIZED = True
 
 # -- Colors & style ------------------------------------------------------------
@@ -163,7 +104,7 @@ def draw_subfigure(ax, total, refresh, draw_mode='both', normalized=False):
     bw = BW if draw_mode == 'both' else BW * 2
 
     def conv(v):
-        return v if normalized else (1 - v) * 100
+        return 1 - v / 100 if normalized else v
 
     if draw_mode == 'both':
         bar_ctrs = PAIR_CTRS
@@ -418,22 +359,8 @@ else:
 
 save_panel(large_total,   f'outputs/energy_{_suffix}_datacenter_total_legend.pdf',   'total',   _ymax, NORMALIZED,legend=True)
 save_panel(small_total,   f'outputs/energy_{_suffix}_edge_total_legend.pdf',         'total',   _ymax, NORMALIZED,legend=True)
-save_panel(large_total,   f'outputs/energy_{_suffix}_datacenter_total_legend.png',   'total',   _ymax, NORMALIZED,legend=True)
-save_panel(small_total,   f'outputs/energy_{_suffix}_edge_total_legend.png',         'total',   _ymax, NORMALIZED,legend=True)
-
 
 if NORMALIZED:
     _ymax = 0.75
 save_panel(large_refresh, f'outputs/energy_{_suffix}_datacenter_refresh_legend.pdf', 'refresh', _ymax, NORMALIZED,legend=True)
 save_panel(small_refresh, f'outputs/energy_{_suffix}_edge_refresh_legend.pdf',       'refresh', _ymax, NORMALIZED,legend=True)
-
-save_panel(large_refresh, f'outputs/energy_{_suffix}_datacenter_refresh_legend.png', 'refresh', _ymax, NORMALIZED,legend=True)
-save_panel(small_refresh, f'outputs/energy_{_suffix}_edge_refresh_legend.png',       'refresh', _ymax, NORMALIZED,legend=True)
-
-
-'''
-
-sa54_ch1_seq.csv 결과:
-
-'''
-
