@@ -120,6 +120,32 @@ edge_fp8 = np.array([
     [10681696, 10188814, 3393459],
     [4166872, 2104299, 66014],
 ], dtype=float)
+
+
+# edge_base = np.array([
+#     [6952999,6481668,2123657],   # LLaMA
+#     [10834023,10336793,3541438], # OPT
+#     [4297717,2150802,112517],    # ResNet
+# ], dtype=float)
+
+# edge_fp16 = np.array([
+#     [6907442,6439040,2081029],
+#     [0,0,0], # Placeholder for OPT FP16 values
+#     [4263676,2128757,90472],
+# ], dtype=float)
+
+# edge_bf16 = np.array([
+#     [6859831,6434557,2121472],
+#     [0,0,0], # Placeholder for OPT FP16 values
+#     [4318495,2171285,133000],
+# ], dtype=float)
+
+# edge_fp8 = np.array([
+#     [6927664,6458395,2100384],
+#     [0,0,0], # Placeholder for OPT FP16 values
+#     [4318495,2171285,133000],
+# ], dtype=float)
+
 # edge_base = np.array([
 #     # llama 3.2-1B
 #     [54373+49425+9944361+2497555+2497555,
@@ -174,7 +200,7 @@ def decompose(data, base):
 
 
 # ── Colors & style ───────────────────────────────────────────────────────────
-DNNS       = ['Llama 3.2-1B', 'OPT-2.7B', 'Resnet50']
+DNNS       = ['Llama 3.2-1B', 'OPT-2.7B', 'ResNet-50']
 PRECISIONS = ['FP16', 'BF16', 'FP8']
 
 # # Colors distinguish cycle components within a bar
@@ -200,22 +226,32 @@ Pale Lilac Pink,#EFD4E8
 '''
 
 
+SCALE = float(os.environ.get('FIG_SCALE', '2.0'))
+
+def S(x):
+    return x * SCALE
+
+def scaled_figsize(w, h):
+    return (w * SCALE, h * SCALE)
+
 plt.rcParams.update({
-    'font.family':       _FONT_NAME, 
+    'font.family':       _FONT_NAME,
     'font.weight':       'bold',
-    'font.size':         11,
-    'axes.titlesize':    11,
-    'axes.labelsize':    11,
-    'xtick.labelsize':   11,
-    'ytick.labelsize':   11,
-    'legend.fontsize':   11,
-    'axes.linewidth':    0.6,
-    'xtick.major.width': 0.5,
-    'ytick.major.width': 0.5,
-    'xtick.major.size':  0,
-    'ytick.major.size':  0,
-    'xtick.major.pad':   2,
-    'ytick.major.pad':   2,
+    'font.size':         S(11),
+    'axes.titlesize':    S(11),
+    'axes.labelsize':    S(11),
+    'xtick.labelsize':   S(11),
+    'ytick.labelsize':   S(11),
+    'legend.fontsize':   S(11),
+    'axes.linewidth':    S(0.6),
+    'xtick.major.width': S(0.5),
+    'ytick.major.width': S(0.5),
+    'xtick.major.size':  S(0),
+    'ytick.major.size':  S(0),
+    'xtick.major.pad':   S(2),
+    'ytick.major.pad':   S(2),
+    'pdf.fonttype':      42,
+    'ps.fonttype':       42,
 })
 
 # ── Layout parameters ─────────────────────────────────────────────────────────
@@ -240,57 +276,57 @@ def draw_subfigure(ax, base, fp16_raw, bf16_raw, fp8_raw):
 
         # Stack: systolic (bottom) → stall → data movement (top)
         ax.bar(xpos, sy, BW,
-               color=COLOR_SY, edgecolor='black', linewidth=0.8, zorder=5)
+               color=COLOR_SY, edgecolor='black', linewidth=0.8 * SCALE, zorder=5)
         ax.bar(xpos, st, BW, bottom=sy,
-               color=COLOR_ST, edgecolor='black', linewidth=0.8, zorder=5)
+               color=COLOR_ST, edgecolor='black', linewidth=0.8 * SCALE, zorder=5)
         ax.bar(xpos, dm, BW, bottom=sy + st,
-               color=COLOR_DM, edgecolor='black', linewidth=0.8, zorder=5)
+               color=COLOR_DM, edgecolor='black', linewidth=0.8 * SCALE, zorder=5)
     
         totals = dm + st + sy
         for xi, t in zip(xpos, totals):
             if not np.isfinite(t):
                 ax.text(xi, 0.03, 'TBD',
-                        ha='center', va='bottom', fontsize=8, rotation=90,
+                        ha='center', va='bottom', fontsize=8 * SCALE, rotation=90,
                         zorder=4)
                 continue
             # precision label just below x-axis tick area, rotated
             ax.text(xi, -0.015, prec,
-                    ha='center', va='top', fontsize=10, rotation=45,
+                    ha='center', va='top', fontsize=10 * SCALE, rotation=45,
                     transform=ax.get_xaxis_transform(), zorder=4)
             ax.text(xi, t + 0.008, f'{t:.3f}',
-                    ha='center', va='bottom', fontsize=10, rotation=90, zorder=4)
-
+                    ha='center', va='bottom', fontsize=10 * SCALE, rotation=90, zorder=4)
+    
     ax.set_xticks(x)
     ax.set_xticklabels(DNNS)
     ax.tick_params(axis='x', bottom=False, top=False,
-                   labelbottom=False, labeltop=True, pad=5)
+                   labelbottom=False, labeltop=True, pad=S(5))
     ax.set_xlim(-0.5, len(DNNS) - 0.5)
     ax.set_ylabel('Normalized cycles', fontweight='bold')
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    ax.yaxis.grid(True, linewidth=0.35, linestyle=':', color='#cccccc', zorder=0)
+    ax.yaxis.grid(True, linewidth=S(0.35), linestyle=':', color='#cccccc', zorder=0)
     ax.set_axisbelow(True)
 
 
 def make_legend():
     return [
-        plt.Rectangle((0,0), 1, 1, fc=COLOR_SY, ec='none', label='systolic compute'),
-        plt.Rectangle((0,0), 1, 1, fc=COLOR_ST, ec='none', label='stall'),
-        plt.Rectangle((0,0), 1, 1, fc=COLOR_DM, ec='none', label='data staging'),
+        plt.Rectangle((0,0), 1, 1, fc=COLOR_SY, ec='none', label='Systolic compute'),
+        plt.Rectangle((0,0), 1, 1, fc=COLOR_ST, ec='none', label='Stall'),
+        plt.Rectangle((0,0), 1, 1, fc=COLOR_DM, ec='none', label='Data staging'),
     ]
 
 
 def save_fig(base, fp16_raw, bf16_raw, fp8_raw, out_path, top_pad=0.08):
     totals = np.concatenate([r[:, 0] / base[:, 0]
                              for r in [fp16_raw, bf16_raw, fp8_raw]])
-    fig, ax = plt.subplots(figsize=(6,3))
+    fig, ax = plt.subplots(figsize=scaled_figsize(6, 3))
     draw_subfigure(ax, base, fp16_raw, bf16_raw, fp8_raw)
     fig.legend(handles=make_legend(), loc='center', ncol=3, frameon=False,
-               bbox_to_anchor=(0.5, 1.05))
+               bbox_to_anchor=(0.5, 0.95))
     ymax = max(1.06, totals.max() + top_pad)
     ax.set_ylim(0, ymax)
     ax.set_yticks([0.00, 0.25, 0.50, 0.75, 1.00])
-    fig.tight_layout(pad=0.5)
+    fig.tight_layout(pad=S(0.5))
     fig.savefig(out_path, bbox_inches='tight')
     
     plt.close(fig)
@@ -298,7 +334,7 @@ def save_fig(base, fp16_raw, bf16_raw, fp8_raw, out_path, top_pad=0.08):
 
 
 def save_legend(out_path):
-    fig, ax = plt.subplots(figsize=(4.8, 0.35))
+    fig, ax = plt.subplots(figsize=scaled_figsize(4.8, 0.35))
     ax.axis('off')
     fig.legend(handles=make_legend(), loc='center', ncol=3, frameon=False,
                bbox_to_anchor=(0.5, 0.5))
@@ -314,7 +350,7 @@ def save_combined_fig():
     ])
     ymax = max(1.06, totals.max() + 0.08)
 
-    fig, (ax_l, ax_r) = plt.subplots(1, 2, figsize=(8, 4), sharey=True)
+    fig, (ax_l, ax_r) = plt.subplots(1, 2, figsize=scaled_figsize(8, 4), sharey=True)
 
     draw_subfigure(ax_l, large_base, large_fp16, large_bf16, large_fp8)
     draw_subfigure(ax_r, edge_base,  edge_fp16,  edge_bf16,  edge_fp8)
@@ -331,15 +367,15 @@ def save_combined_fig():
 
     fig.legend(handles=make_legend(), loc='upper center',
                ncol=3, frameon=False, bbox_to_anchor=(0.5, 0.99))
-    fig.tight_layout(pad=0.5, rect=[0, 0.20, 1, 0.83])
+    fig.tight_layout(pad=S(0.5), rect=[0, 0.20, 1, 0.83])
     fig.savefig('outputs/accel_perf_combined.pdf', bbox_inches='tight')
     plt.close(fig)
     print('Saved outputs/accel_perf_combined.pdf')
 
 # ── Generate figures ──────────────────────────────────────────────────────────
 #save_legend('outputs/accel_perf_legend.pdf')
-save_fig(large_base, large_fp16, large_bf16, large_fp8, 'outputs/accel_perf_large.pdf',top_pad=0.4)
-save_fig(edge_base,  edge_fp16,  edge_bf16,  edge_fp8,  'outputs/accel_perf_edge.pdf', top_pad=0.4)
+#save_fig(large_base, large_fp16, large_bf16, large_fp8, 'outputs/accel_perf_large_2.pdf',top_pad=0.4)
+save_fig(edge_base,  edge_fp16,  edge_bf16,  edge_fp8,  'outputs/accel_perf_edge_2.pdf', top_pad=0.4)
 
 
 # -- Generate combined figure --------------------------------------------------

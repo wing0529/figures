@@ -20,7 +20,7 @@ os.makedirs('outputs', exist_ok=True)
 
 
 SIM_ROOT = Path(__file__).resolve().parents[1] / 'SCALE-SIMv3_Ramulator2' / 'SCALE-Sim'
-WORKLOAD_LABELS = ['Llama 3.2-1B', 'OPT-2.7B', 'Resnet50']
+WORKLOAD_LABELS = ['Llama 3.2-1B', 'OPT-2.7B', 'ResNet-50']
 MODEL_ORDER = ['llama', 'opt', 'resnet']
 
 
@@ -50,17 +50,19 @@ def load_speedups(csv_path, variant, fallback):
 
 
 # ── Data  (baseline_cycles / config_cycles) ──────────────────────────────────
+# Current paper-facing mobile result: sa64/ch1 seq trace.
+edge_fallback = (
+    WORKLOAD_LABELS,
+    np.array([1.1423, 1.1424, 1.1357]),
+    np.array([1.0784, 1.0785, 1.0741]),
+    np.array([1.0784, 1.0785, 1.0741]),
+)
+
 large_fallback = (
     WORKLOAD_LABELS,
     np.array([1.1409, 1.1412, 1.1372]),
     np.array([1.0772, 1.0774, 1.0831]),
     np.array([1.0772, 1.0774, 1.1371]),
-)
-edge_fallback = (
-    WORKLOAD_LABELS,
-    np.array([1.1391, 1.1385, 1.1387]),
-    np.array([1.0756, 1.0750, 1.0837]),
-    np.array([1.0756, 1.0750, 1.1384]),
 )
 
 large_dnns, large_FP16, large_BF16, large_FP8 = load_speedups(
@@ -91,27 +93,38 @@ COLOR_FP8 = '#BE6C91' #92658E' #(상단 (Layer 3))
 
 FIGURE_DIR  = Path(__file__).resolve().parent
 _FONT_PATH = 'arialnarrow_bold.ttf'
+_FONT_NAME = 'DejaVu Sans'
 if Path(_FONT_PATH).exists():
     fm.fontManager.addfont(_FONT_PATH)
     _FONT_NAME = fm.FontProperties(fname=_FONT_PATH).get_name()
 
+FIG_SCALE = float(os.environ.get('FIG_SCALE', '2.0'))
+
+def S(x):
+    return x * FIG_SCALE
+
+def scaled_figsize(w, h):
+    return (w * FIG_SCALE, h * FIG_SCALE)
+
 plt.rcParams.update({
-    'font.family'       : _FONT_NAME, 
+    'font.family'       : _FONT_NAME,
     'font.weight'       : 'bold',
-    'font.size'         : 11,
-    'axes.titlesize'    : 11,
-    'axes.labelsize'    : 11,
-    'xtick.labelsize'   : 11,
-    'ytick.labelsize'   : 11,
-    'legend.fontsize'   : 11,
-    'figure.titlesize'  : 11,
-    'axes.linewidth'    : 0.6,
-    'xtick.major.width' : 0.5,
-    'ytick.major.width' : 0.5,
-    'xtick.major.size'  : 0,
-    'ytick.major.size'  : 0,
-    'xtick.major.pad'   : 2,
-    'ytick.major.pad'   : 2,
+    'font.size'         : S(11),
+    'axes.titlesize'    : S(11),
+    'axes.labelsize'    : S(11),
+    'xtick.labelsize'   : S(11),
+    'ytick.labelsize'   : S(11),
+    'legend.fontsize'   : S(11),
+    'figure.titlesize'  : S(11),
+    'axes.linewidth'    : S(0.6),
+    'xtick.major.width' : S(0.5),
+    'ytick.major.width' : S(0.5),
+    'xtick.major.size'  : S(0),
+    'ytick.major.size'  : S(0),
+    'xtick.major.pad'   : S(2),
+    'ytick.major.pad'   : S(2),
+    'pdf.fonttype'      : 42,
+    'ps.fonttype'       : 42,
 })
 
 
@@ -128,7 +141,7 @@ def draw_suBFigure(ax, dnns, FP16, BF16, FP8):
     for offset, (label, values, color) in zip(offsets, precisions):
         for i, v in enumerate(values):
             ax.bar(x[i] + offset, v, width,
-                   color=color, edgecolor='black', linewidth=0.8, zorder=3)
+                   color=color, edgecolor='black', linewidth=S(0.8), zorder=3)
         ax.bar([], [], width, color=color, label=label, zorder=3)
 
     # Value labels above each bar
@@ -137,15 +150,15 @@ def draw_suBFigure(ax, dnns, FP16, BF16, FP8):
             ax.text(x[i] + offset, v + 0.003,
                     f'{v:.3f}x',
                     ha='center', va='bottom',
-                    fontsize=11, rotation=90, zorder=4)
+                    fontsize=S(11), rotation=90, zorder=4)
 
     # Baseline reference line
-    ax.axhline(1.0, color='#444444', linewidth=0.8, linestyle='--', zorder=2)
+    ax.axhline(1.0, color='#444444', linewidth=S(0.8), linestyle='--', zorder=2)
 
     # Axes
     ax.set_xticks(x)
     ax.set_xticklabels(dnns)
-    ax.set_ylabel('Normalized throughput', fontweight='bold')
+    ax.set_ylabel('Normalized throughput', fontweight='bold', labelpad=S(1.5))
     ax.set_xlim(-0.55, n - 0.45)
 
     ymin = 0.95
@@ -154,7 +167,7 @@ def draw_suBFigure(ax, dnns, FP16, BF16, FP8):
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    ax.yaxis.grid(True, linewidth=0.35, linestyle=':', color='#cccccc', zorder=0)
+    ax.yaxis.grid(True, linewidth=S(0.35), linestyle=':', color='#cccccc', zorder=0)
     ax.set_axisbelow(True)
 
 
@@ -167,23 +180,22 @@ def legend_patches():
 
 
 # ── Large-scale figure ────────────────────────────────────────────────────────
-fig1, ax1 = plt.subplots(figsize=(4, 2))
+fig1, ax1 = plt.subplots(figsize=scaled_figsize(4, 2))
 draw_suBFigure(ax1, large_dnns, large_FP16, large_BF16, large_FP8)
 
 fig1.legend(handles=legend_patches(), loc='upper center',
             ncol=4, frameon=False, bbox_to_anchor=(0.5, 1.06))
-fig1.tight_layout(pad=0.5, rect=[0, 0.08, 1, 1])
+fig1.tight_layout(pad=0.5, rect=[0.08, 0.08, 1, 0.98])
 fig1.savefig('outputs/throughput_large.pdf', bbox_inches='tight')
 plt.close(fig1)
 
 # ── Edge-device figure ────────────────────────────────────────────────────────
-fig2, ax2 = plt.subplots(figsize=(4, 2))
+fig2, ax2 = plt.subplots(figsize=scaled_figsize(4, 2))
 draw_suBFigure(ax2, edge_dnns, edge_FP16, edge_BF16, edge_FP8)
 fig2.legend(handles=legend_patches(), loc='upper center',
             ncol=4, frameon=False, bbox_to_anchor=(0.5, 1.06))
-fig2.tight_layout(pad=0.5, rect=[0, 0.08, 1, 1])
+fig2.tight_layout(pad=0.5, rect=[0.08, 0.08, 1, 0.98])
 fig2.savefig('outputs/throughput_edge.pdf', bbox_inches='tight')
-fig2.savefig('outputs/throughput_edge.png', bbox_inches='tight')
 plt.close(fig2)
 
 # ── Combined figure (large + edge side by side) ───────────────────────────────

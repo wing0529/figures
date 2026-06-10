@@ -157,8 +157,8 @@ def save_fig(fig, path: Path, dpi=300):
 
 
 #     for i, (nr, r) in enumerate(zip(non_refresh, refresh)):
-#         ax.text(i, r / 2,      f'{r}%',  ha='center', va='center', fontsize=11, fontweight='bold', color='white',  zorder=5)
-#         ax.text(i, r + nr / 2, f'{nr}%', ha='center', va='center', fontsize=11, fontweight='bold', color='black',  zorder=5)
+#         ax.text(i, r / 2,      f'{r:.1f}%',  ha='center', va='center', fontsize=11, fontweight='bold', color='white',  zorder=5)
+#         ax.text(i, r + nr / 2, f'{nr:.1f}%', ha='center', va='center', fontsize=11, fontweight='bold', color='black',  zorder=5)
 
 #     ax.set_xticks(list(x));  ax.set_xticklabels(densities, fontweight='bold')
 #     ax.set_yticks(range(0, 101, 20));  ax.set_ylim(0, 100)
@@ -173,8 +173,19 @@ def save_fig(fig, path: Path, dpi=300):
 
 def draw_energy(ax):
     densities   = ['8 Gb', '16 Gb', '32 Gb']
-    refresh     = [14, 22, 34]
-    non_refresh = [86, 78, 66]
+    # Previous hard-coded motivation values. Kept for provenance.
+    # refresh     = [14, 22, 34]
+    # non_refresh = [86, 78, 66]
+
+    # LLaMA seq, LPDDR5 density sweep, refresh_on baseline.
+    # Source:
+    # SCALE-SIMv3_Ramulator2/SCALE-Sim/analysis_results/
+    #   llama_density_refresh_sweep/llama_density_refresh_aggregate.csv
+    # Previous total-DRAM-energy basis: refresh = [15.98, 25.30, 38.91]
+    # Active-energy basis excludes background energy:
+    # total_ref_energy / (total_energy - total_background_energy).
+    refresh     = [17.10, 26.88, 40.87]
+    non_refresh = [100.0 - r for r in refresh]
     
     # ==========================================================================
     # [선택] 원하시는 옵션 하나만 남기고 주석을 해제하여 사용하세요.
@@ -210,44 +221,47 @@ def draw_energy(ax):
     bw  = 0.4
 
     # 바 차트 그리기 (zorder를 주어 그리드 뒤로 가도록 설정)
-    br = ax.bar(x, refresh, width=bw, color=C_REF, edgecolor='black', linewidth=0.8, label='Refresh', zorder=3)
-    bn = ax.bar(x, non_refresh, width=bw, color=C_NREF, edgecolor='black', linewidth=0.8, label='Non-Refresh',
+    br = ax.bar(x, refresh, width=bw, color=C_REF, edgecolor='black', linewidth=S(0.8), label='Refresh', zorder=3)
+    bn = ax.bar(x, non_refresh, width=bw, color=C_NREF, edgecolor='black', linewidth=S(0.8), label='Non-Refresh',
                 bottom=refresh, zorder=3)
 
     # 텍스트 레이블 추가
     for i, (nr, r) in enumerate(zip(non_refresh, refresh)):
         # Refresh 텍스트 (하단 블록의 중앙)
-        ax.text(i, r / 2, f'{r}%', ha='center', va='center', 
-                fontsize=9, fontweight='bold', color=TEXT_COLOR_REF, zorder=5)
+        ax.text(i, r / 2, f'{r:.1f}%', ha='center', va='center', 
+                fontsize=S(9), fontweight='bold', color=TEXT_COLOR_REF, zorder=5)
         # Non-Refresh 텍스트 (상단 블록의 중앙)
-        ax.text(i, r + nr / 2, f'{nr}%', ha='center', va='center', 
-                fontsize=9, fontweight='bold', color=TEXT_COLOR_NREF, zorder=5)
+        ax.text(i, r + nr / 2, f'{nr:.1f}%', ha='center', va='center', 
+                fontsize=S(9), fontweight='bold', color=TEXT_COLOR_NREF, zorder=5)
 
     # 축 및 스타일 레이아웃 설정
     ax.set_xticks(list(x))
-    ax.set_xticklabels(densities, fontweight='bold',fontsize=9)
+    ax.set_xticklabels(densities, fontweight='bold',fontsize=S(9))
     ax.set_yticks(range(0, 101, 20))
-    ax.set_yticklabels([f'{y}%' for y in range(0, 101, 20)], fontsize=9)
+    ax.set_yticklabels([f'{y}%' for y in range(0, 101, 20)], fontsize=S(9))
     ax.set_ylim(0, 100)
-    ax.set_ylabel('Active Energy (%)', fontweight='bold')
+    # Previous label: ax.set_ylabel('Active energy (%)', fontweight='bold')
+    ax.set_ylabel('Active energy (%)', fontweight='bold')
     ax.set_xlabel('Die density', fontweight='bold')
 
     
     ax.set_xticks(list(x))
-    ax.set_xticklabels(densities, fontweight='bold',fontsize=9)
+    ax.set_xticklabels(densities, fontweight='bold',fontsize=S(9))
     ax.set_yticks(range(0, 101, 20))
-    ax.set_yticklabels([f'{y}%' for y in range(0, 101, 20)], fontsize=9)
+    ax.set_yticklabels([f'{y}%' for y in range(0, 101, 20)], fontsize=S(9))
     ax.set_ylim(0, 100)
-    ax.set_ylabel('Active Energy (%)', fontweight='bold')
+    # Previous label: ax.set_ylabel('Active energy (%)', fontweight='bold')
+    ax.set_ylabel('Active energy (%)', fontweight='bold')
     ax.set_xlabel('Die density', fontweight='bold')
 
     
     ax.set_xticks(list(x))
-    ax.set_xticklabels(densities, fontweight='bold',fontsize=9)
+    ax.set_xticklabels(densities, fontweight='bold',fontsize=S(9))
     ax.set_yticks(range(0, 101, 20))
-    ax.set_yticklabels([f'{y}%' for y in range(0, 101, 20)], fontsize=9)
+    ax.set_yticklabels([f'{y}%' for y in range(0, 101, 20)], fontsize=S(9))
     ax.set_ylim(0, 100)
-    ax.set_ylabel('Active Energy (%)', fontweight='bold')
+    # Previous label: ax.set_ylabel('Active energy (%)', fontweight='bold')
+    ax.set_ylabel('Active energy (%)', fontweight='bold')
     ax.set_xlabel('Die density', fontweight='bold')
     
     # 테두리 정리
@@ -255,7 +269,7 @@ def draw_energy(ax):
     ax.spines['right'].set_visible(False)
     ax.grid(axis='y', linestyle=':', alpha=0.4, zorder=0)
     
-    # 범례 설정 (깔끔하게 Non-Refresh가 먼저 오도록 순서 매칭)
+    ax.set_xticks(list(x))
     # ax.legend(handles=[bn, br], labels=['Non-Refresh', 'Refresh'],
     #           fontsize=9, frameon=True, framealpha=0.9,
     #           edgecolor='#cccccc', ncol=2, bbox_to_anchor=(1.02, 1.10))
@@ -270,7 +284,7 @@ def draw_energy(ax):
     #         bbox_to_anchor=(1.05, 0.47))
 
     ax.legend(handles=[bn, br], labels=['Non-Refresh', 'Refresh'],
-          fontsize=9, 
+          fontsize=S(9), 
           frameon=False,               # ★ True에서 False로 변경 (테두리 및 배경 제거)
           ncol=2,                      
           loc='lower center',          
@@ -310,24 +324,24 @@ def draw_bitwise(ax, model=DEFAULT_MODEL, metric=DEFAULT_METRIC,
         pct = worst[b]
         if math.isnan(pct):
             ax.bar(xi, cap_h, width=0.58, color='#3E2E5E', alpha=0.72,
-                   edgecolor="black", lw=1, zorder=3)
+                   edgecolor="black", lw=S(1), zorder=3)
             ax.text(xi, cap_h * 0.01, "NaN", ha="center", va="bottom",
-                    color="white", fontsize=11, fontweight="bold", rotation=90, zorder=6)
+                    color="white", fontsize=S(11), fontweight="bold", rotation=90, zorder=6)
         elif math.isinf(pct) or pct >= 1e6:
             ax.bar(xi, cap_h, width=0.58, color='#3E2E5E', alpha=0.78,
-                   edgecolor="black", lw=1, zorder=3)
+                   edgecolor="black", lw=S(1), zorder=3)
             ax.text(xi, cap_h * 0.005, ">100x", ha="center", va="bottom",
-                    color="white", fontsize=11, fontweight="bold", rotation=90, zorder=6)
+                    color="white", fontsize=S(11), fontweight="bold", rotation=90, zorder=6)
         else:
             ax.bar(xi, pct, width=0.58, color='#3E2E5E', alpha=0.78,
-                   edgecolor="black", lw=1, zorder=3)
+                   edgecolor="black", lw=S(1), zorder=3)
             lbl = fmt_delta_pct(pct)
             # if pct >= 10.0:
             #     ax.text(xi, pct * 0.005, lbl, ha="center", va="bottom",
-            #             color="white", fontsize=11, fontweight="bold", rotation=90, zorder=6)
+            #             color="white", fontsize=S(11), fontweight="bold", rotation=90, zorder=6)
             #elif 0.05 <= pct < 10.0:
                 # ax.text(xi, pct * 1.3, lbl, ha="center", va="bottom",
-                #         color="black", fontsize=9, fontweight="bold", rotation=90, zorder=6)
+                #         color="black", fontsize=S(9), fontweight="bold", rotation=90, zorder=6)
 
     # field background
     ax.axvspan(-0.5,  0.5, alpha=0.08, color='#b0b0b0' , zorder=0)
@@ -347,12 +361,12 @@ def draw_bitwise(ax, model=DEFAULT_MODEL, metric=DEFAULT_METRIC,
 
     ax.set_yscale("symlog", linthresh=0.1)
     ax.set_ylim(bottom=0, top=cap_h)
-    ax.set_xticks(x);  ax.set_xticklabels([str(b) for b in bits_x], fontsize=10)
+    ax.set_xticks(x);  ax.set_xticklabels([str(b) for b in bits_x], fontsize=S(10))
     ax.set_xlim(-0.6, len(bits_x) - 0.4)
-    ax.set_xlabel("FP16 Bit Index", fontweight='bold')
-    ax.set_ylabel("PPL Increase (%)", fontweight='bold')
+    ax.set_xlabel("FP16 bit index", fontweight='bold')
+    ax.set_ylabel("PPL increase (%)", fontweight='bold')
     ax.grid(axis="y", which="both", linestyle=":", alpha=0.75, zorder=4)
-    ax.axhline(0.0, color="black", linewidth=0.8, linestyle="--", zorder=7)
+    ax.axhline(0.0, color="black", linewidth=S(0.8), linestyle="--", zorder=7)
     return ax
 
 
@@ -411,26 +425,26 @@ def draw_bitwise_2(ax, model=DEFAULT_MODEL, metric=DEFAULT_METRIC,
         pct = worst[b]
         if math.isnan(pct):
             ax.bar(xi, cap_h, width=0.58, color='#3E2E5E', alpha=0.72,
-                   edgecolor="black", lw=0.8, zorder=3)
+                   edgecolor="black", lw=S(0.8), zorder=3)
             ax.text(xi, cap_h * 0.01, "NaN", ha="center", va="bottom",
-                    color="white", fontsize=10, fontweight="bold", rotation=90, zorder=6)
+                    color="white", fontsize=S(10), fontweight="bold", rotation=90, zorder=6)
         elif math.isinf(pct) or pct >= 1e6:
             ax.bar(xi, cap_h, width=0.58, color='#3E2E5E', alpha=0.78,
-                   edgecolor="black", lw=0.8, zorder=3)
+                   edgecolor="black", lw=S(0.8), zorder=3)
             ax.text(xi, cap_h * 0.005, ">100x", ha="center", va="bottom",
-                    color="white", fontsize=10, fontweight="bold", rotation=90, zorder=6)
+                    color="white", fontsize=S(10), fontweight="bold", rotation=90, zorder=6)
         else:
             ax.bar(xi, pct, width=0.58, color='#3E2E5E', alpha=0.78,
-                   edgecolor="black", lw=0.8, zorder=3)
+                   edgecolor="black", lw=S(0.8), zorder=3)
 
     ax.set_yscale("symlog", linthresh=0.1)
     ax.set_ylim(bottom=0, top=cap_h)
-    ax.set_xticks(x);  ax.set_xticklabels([str(b) for b in bits_x], fontsize=11)
+    ax.set_xticks(x);  ax.set_xticklabels([str(b) for b in bits_x], fontsize=S(11))
     ax.set_xlim(-0.6, len(bits_x) - 0.4)
-    ax.set_xlabel("FP16 Bit Index", fontweight='bold', labelpad=3)
-    ax.set_ylabel("PPL Increase (%)", fontweight='bold', labelpad=3)
+    ax.set_xlabel("FP16 bit index", fontweight='bold', labelpad=3)
+    ax.set_ylabel("PPL increase (%)", fontweight='bold', labelpad=3)
     ax.grid(axis="y", which="both", linestyle=":", alpha=0.65, zorder=2)
-    ax.axhline(0.0, color="black", linewidth=0.8, linestyle="--", zorder=7)
+    ax.axhline(0.0, color="black", linewidth=S(0.8), linestyle="--", zorder=7)
 
     # Put field names above the plotting area so labels stay readable on
     # log-scale bars and do not collide with data.
@@ -438,9 +452,9 @@ def draw_bitwise_2(ax, model=DEFAULT_MODEL, metric=DEFAULT_METRIC,
     for left, right, label, color, _ in field_spans:
         cx = (left + right) / 2
         ax.text(cx, 1.055, label, transform=trans, ha="center", va="bottom",
-                fontsize=11, fontweight="bold", color=color, clip_on=False)
+                fontsize=S(11), fontweight="bold", color=color, clip_on=False)
         ax.plot([left + 0.06, right - 0.06], [1.035, 1.035], transform=trans,
-                color=color, linewidth=1.6, solid_capstyle="round", clip_on=False)
+                color=color, linewidth=S(1.6), solid_capstyle="round", clip_on=False)
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
@@ -515,26 +529,26 @@ def draw_bitwise_3(ax, model=DEFAULT_MODEL, metric=DEFAULT_METRIC,
         pct = worst[b]
         if math.isnan(pct):
             ax.bar(xi, cap_h, width=0.58, color=get_bar_color(b), alpha=0.72,
-                   edgecolor="black", lw=0.8, zorder=3)
+                   edgecolor="black", lw=S(0.8), zorder=3)
             ax.text(xi, cap_h * 0.01, "NaN", ha="center", va="bottom",
-                    color="white", fontsize=10, fontweight="bold", rotation=90, zorder=6)
+                    color="white", fontsize=S(10), fontweight="bold", rotation=90, zorder=6)
         elif math.isinf(pct) or pct >= 1e6:
             ax.bar(xi, cap_h, width=0.58, color=get_bar_color(b), alpha=0.78,
-                   edgecolor="black", lw=0.8, zorder=3)
+                   edgecolor="black", lw=S(0.8), zorder=3)
             ax.text(xi, cap_h * 0.005, ">100x", ha="center", va="bottom",
-                    color="white", fontsize=10, fontweight="bold", rotation=90, zorder=6)
+                    color="white", fontsize=S(10), fontweight="bold", rotation=90, zorder=6)
         else:
             ax.bar(xi, pct, width=0.58, color=get_bar_color(b), alpha=0.78,
-                   edgecolor="black", lw=0.8, zorder=3)
+                   edgecolor="black", lw=S(0.8), zorder=3)
 
     ax.set_yscale("symlog", linthresh=0.1)
     ax.set_ylim(bottom=0, top=cap_h)
-    ax.set_xticks(x);  ax.set_xticklabels([str(b) for b in bits_x], fontsize=11)
+    ax.set_xticks(x);  ax.set_xticklabels([str(b) for b in bits_x], fontsize=S(11))
     ax.set_xlim(-0.6, len(bits_x) - 0.4)
-    ax.set_xlabel("FP16 Bit Index", fontweight='bold', labelpad=3)
-    ax.set_ylabel("PPL Increase (%)", fontweight='bold', labelpad=3)
+    ax.set_xlabel("FP16 Bit Index", fontweight='bold', labelpad=S(3))
+    ax.set_ylabel("PPL Increase (%)", fontweight='bold', labelpad=S(3))
     ax.grid(axis="y", which="both", linestyle=":", alpha=0.65, zorder=2)
-    ax.axhline(0.0, color="black", linewidth=0.8, linestyle="--", zorder=7)
+    ax.axhline(0.0, color="black", linewidth=S(0.8), linestyle="--", zorder=7)
 
     # Put field names above the plotting area so labels stay readable on
     # log-scale bars and do not collide with data.
@@ -542,17 +556,42 @@ def draw_bitwise_3(ax, model=DEFAULT_MODEL, metric=DEFAULT_METRIC,
     for left, right, label, color, _ in field_spans:
         cx = (left + right) / 2
         ax.text(cx, 1.055, label, transform=trans, ha="center", va="bottom",
-                fontsize=11, fontweight="bold", color=color, clip_on=False)
+                fontsize=S(11), fontweight="bold", color=color, clip_on=False)
         ax.plot([left + 0.06, right - 0.06], [1.035, 1.035], transform=trans,
-                color=color, linewidth=1.6, solid_capstyle="round", clip_on=False)
+                color=color, linewidth=S(1.6), solid_capstyle="round", clip_on=False)
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     return ax
 
+FIG_SCALE = 2.0
 
+def S(x):
+    return x * FIG_SCALE
 
+def scaled_figsize(w, h):
+    return (w * FIG_SCALE, h * FIG_SCALE)
 
+def scaled_figsize(w, h):
+    return (w * FIG_SCALE, h * FIG_SCALE)
+plt.rcParams.update({
+    'font.family':       _FONT_NAME,
+    'font.weight':       'bold',
+    'font.size':         S(11),
+    'axes.labelsize':    S(11),
+    'axes.titlesize':    S(11),
+    'xtick.labelsize':   S(11),
+    'ytick.labelsize':   S(11),
+    'axes.linewidth':    S(0.7),
+    'xtick.major.width': S(0.5),
+    'ytick.major.width': S(0.5),
+    'xtick.major.size':  S(3),
+    'ytick.major.size':  S(3),
+    'xtick.major.pad':   S(2),
+    'ytick.major.pad':   S(2),
+    'pdf.fonttype': 42,
+    'ps.fonttype': 42,
+})
 # ── Main: save individual + combined ─────────────────────────────────────────
 
 def main(model=DEFAULT_MODEL, metric=DEFAULT_METRIC,
@@ -562,25 +601,39 @@ def main(model=DEFAULT_MODEL, metric=DEFAULT_METRIC,
     trefi_list = trefi_list or DEFAULT_TREFI
 
     # ── 1. Energy standalone ──────────────────────────────────────────────────
-    fig_e, ax_e = plt.subplots(figsize=(5, 2))
+    fig_e, ax_e = plt.subplots(figsize=scaled_figsize(5, 2))
     draw_energy(ax_e)
+    fontsize=S(9)
+    linewidth=S(0.8)
+    labelpad=S(3)
     fig_e.tight_layout()
-    save_fig(fig_e, OUT / "fig_energy.png")
+
+    fig_e.savefig(OUT / "fig_energy.pdf", bbox_inches="tight")
+
     plt.close(fig_e)
+    
+    # # ── 2. Bitwise standalone ────────────────────────────────────────────────
+    # fig_b, ax_b = plt.subplots(figsize=(5.5, 2.5))
+    # draw_bitwise(ax_b, model=model, metric=metric, csv_path=csv_path, trefi_list=trefi_list)
+    # fig_b.tight_layout()
+    # save_fig(fig_b, OUT / "fig_bitwise.pdf")
+    # plt.close(fig_b) 
 
-    # ── 2. Bitwise standalone ────────────────────────────────────────────────
-    fig_b, ax_b = plt.subplots(figsize=(5.5, 2.5))
-    draw_bitwise(ax_b, model=model, metric=metric, csv_path=csv_path, trefi_list=trefi_list)
+    fig_b, ax_b = plt.subplots(figsize=scaled_figsize(5.5, 2.5))
+    fontsize=S(9)
+    linewidth=S(0.8)
+    labelpad=S(3)
+    draw_bitwise_2(
+        ax_b,
+        model=model,
+        metric=metric,
+        csv_path=csv_path,
+        trefi_list=trefi_list,
+    )
     fig_b.tight_layout()
-    save_fig(fig_b, OUT / "fig_bitwise.png")
-    save_fig(fig_b, OUT / "fig_bitwise.pdf")
-    plt.close(fig_b) 
 
-    fig_b, ax_b = plt.subplots(figsize=(5.5, 2.5))
-    draw_bitwise_2(ax_b, model=model, metric=metric, csv_path=csv_path, trefi_list=trefi_list)
-    fig_b.tight_layout()
-    save_fig(fig_b, OUT / "fig_bitwise_2.png")
-    save_fig(fig_b, OUT / "fig_bitwise_2.pdf")
+    fig_b.savefig(OUT / "fig_bitwise_2.pdf", bbox_inches="tight")
+
     plt.close(fig_b)
 
 

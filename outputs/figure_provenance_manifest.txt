@@ -1,0 +1,8 @@
+Figure provenance archive generated from existing data.
+
+seq trace set:
+  LLaMA  results/trace/llama_sa64_ch1_seq
+  OPT    results/trace/opt_sa64_ch1_seq
+  ResNet results/trace/resnet_sa64_ch1_strictseq
+  DRAM CSV: SCALE-SIMv3_Ramulator2/SCALE-Sim/workload_config_results_sa64_ch1_seq.csv
+  Accelerator: hard-coded table in figures/accel_perf.py / pasted seq results

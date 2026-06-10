@@ -1,0 +1,4 @@
+model,Freya,PCM,Approx_RowSplitController_weighted
+Llama 3.2-1B,1.142000,0.352000,0.059000
+OPT-2.7B,1.142000,0.350000,0.058000
+ResNet-50,1.136000,0.347000,0.059000
