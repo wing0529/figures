@@ -13,7 +13,7 @@ os.makedirs('outputs', exist_ok=True)
 
 
 FIGURE_DIR  = Path(__file__).resolve().parent
-_FONT_PATH = '/home/wing02/arialnarrow_bold.ttf'
+_FONT_PATH = 'arialnarrow_bold.ttf'
 if Path(_FONT_PATH).exists():
     fm.fontManager.addfont(_FONT_PATH)
     _FONT_NAME = fm.FontProperties(fname=_FONT_PATH).get_name()
@@ -286,22 +286,23 @@ def draw_subfigure(ax, base, fp16_raw, bf16_raw, fp8_raw):
         for xi, t in zip(xpos, totals):
             if not np.isfinite(t):
                 ax.text(xi, 0.03, 'TBD',
-                        ha='center', va='bottom', fontsize=8 * SCALE, rotation=90,
+                        ha='center', va='bottom', fontsize=9 * SCALE, rotation=90,
                         zorder=4)
                 continue
             # precision label just below x-axis tick area, rotated
             ax.text(xi, -0.015, prec,
-                    ha='center', va='top', fontsize=10 * SCALE, rotation=45,
+                    ha='center', va='top', fontsize=9 * SCALE, rotation=45,
                     transform=ax.get_xaxis_transform(), zorder=4)
             ax.text(xi, t + 0.008, f'{t:.3f}',
-                    ha='center', va='bottom', fontsize=10 * SCALE, rotation=90, zorder=4)
+                    ha='center', va='bottom', fontsize=9 * SCALE, rotation=90, zorder=4)
     
     ax.set_xticks(x)
+    
     ax.set_xticklabels(DNNS)
     ax.tick_params(axis='x', bottom=False, top=False,
-                   labelbottom=False, labeltop=True, pad=S(5))
+                   labelbottom=False, labeltop=True, pad=S(-5))
     ax.set_xlim(-0.5, len(DNNS) - 0.5)
-    ax.set_ylabel('Normalized cycles', fontweight='bold')
+    ax.set_ylabel('Normalized cycles', fontweight='bold', fontsize=S(15), labelpad=S(1.5))
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.yaxis.grid(True, linewidth=S(0.35), linestyle=':', color='#cccccc', zorder=0)
@@ -322,7 +323,7 @@ def save_fig(base, fp16_raw, bf16_raw, fp8_raw, out_path, top_pad=0.08):
     fig, ax = plt.subplots(figsize=scaled_figsize(6, 3))
     draw_subfigure(ax, base, fp16_raw, bf16_raw, fp8_raw)
     fig.legend(handles=make_legend(), loc='center', ncol=3, frameon=False,
-               bbox_to_anchor=(0.5, 0.95))
+               bbox_to_anchor=(0.5, 0.90))
     ymax = max(1.06, totals.max() + top_pad)
     ax.set_ylim(0, ymax)
     ax.set_yticks([0.00, 0.25, 0.50, 0.75, 1.00])

@@ -28,9 +28,11 @@ if Path(_FONT_PATH).exists():
 
 # -- Data ----------------------------------------------------------------------
 SIM_ROOT = Path(__file__).resolve().parents[1] / 'SCALE-SIMv3_Ramulator2' / 'SCALE-Sim'
-DNNS       = ['Llama 3.2-1B', 'OPT-2.7B', 'ResNet-50']
+DNNS       = ['Llama 3.2-1B', 'OPT-2.7B']
+#DNNS       = ['Llama 3.2-1B', 'OPT-2.7B', 'ResNet-50']
+
 PRECISIONS = ['FP16', 'BF16', 'FP8']
-MODEL_ORDER = ['llama', 'opt', 'resnet']
+MODEL_ORDER = ['llama', 'opt']
 CONFIG_FOR_PREC = {'FP16': 'fp16', 'BF16': 'bf16', 'FP8': 'fp8'}
 
 FIG_SCALE = 2.0
@@ -140,14 +142,25 @@ large_total, large_refresh = load_normalized_energy(
 NORMALIZED = True
 
 # -- Colors & style ------------------------------------------------------------
+# COLORS ={
+#     'FP16': '#6A5C94',
+#     'BF16': '#8E7EA8',
+#     'FP8':  '#C99AB8'
+# }
+# REF_COLORS = {'FP16_refresh': '#8A4E7E',
+#               'BF16_refresh': '#BA7EAC',
+#               'FP8_refresh':  '#DCAECE'}
+
 COLORS ={
-    'FP16': '#6A5C94',
-    'BF16': '#8E7EA8',
-    'FP8':  '#C99AB8'
+    'FP16': '#3E2E5E',
+    'BF16': '#71618B' ,
+    'FP8':  '#BE6C91' 
 }
-REF_COLORS = {'FP16_refresh': '#8A4E7E',
-              'BF16_refresh': '#BA7EAC',
-              'FP8_refresh':  '#DCAECE'}
+REF_COLORS = {'FP16_refresh': '#3E2E5E',
+              'BF16_refresh': '#71618B' ,
+              'FP8_refresh':  '#BE6C91' }
+
+
 #COLORS = {'FP16': '#D94A64', 'BF16': '#8C1F6F', 'FP8': '#2D1040'}
 
 # plt.rcParams.update({

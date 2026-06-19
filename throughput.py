@@ -20,8 +20,11 @@ os.makedirs('outputs', exist_ok=True)
 
 
 SIM_ROOT = Path(__file__).resolve().parents[1] / 'SCALE-SIMv3_Ramulator2' / 'SCALE-Sim'
-WORKLOAD_LABELS = ['Llama 3.2-1B', 'OPT-2.7B', 'ResNet-50']
-MODEL_ORDER = ['llama', 'opt', 'resnet']
+WORKLOAD_LABELS = ['Llama 3.2-1B', 'OPT-2.7B']
+MODEL_ORDER = ['llama', 'opt']
+
+# WORKLOAD_LABELS = ['Llama 3.2-1B', 'OPT-2.7B', 'ResNet-50']
+# MODEL_ORDER = ['llama', 'opt', 'resnet']
 
 
 def load_speedups(csv_path, variant, fallback):
@@ -65,11 +68,11 @@ large_fallback = (
     np.array([1.0772, 1.0774, 1.1371]),
 )
 
-large_dnns, large_FP16, large_BF16, large_FP8 = load_speedups(
-    SIM_ROOT / 'workload_config_results_sa256_ch16_seq.csv',
-    'server',
-    large_fallback,
-)
+# large_dnns, large_FP16, large_BF16, large_FP8 = load_speedups(
+#     SIM_ROOT / 'workload_config_results_sa256_ch16_seq.csv',
+#     'server',
+#     large_fallback,
+# )
 edge_dnns, edge_FP16, edge_BF16, edge_FP8 = load_speedups(
     SIM_ROOT / 'workload_config_results_sa64_ch1_seq.csv',
     'edge',
@@ -180,14 +183,14 @@ def legend_patches():
 
 
 # ── Large-scale figure ────────────────────────────────────────────────────────
-fig1, ax1 = plt.subplots(figsize=scaled_figsize(4, 2))
-draw_suBFigure(ax1, large_dnns, large_FP16, large_BF16, large_FP8)
+#fig1, ax1 = plt.subplots(figsize=scaled_figsize(4, 2))
+#draw_suBFigure(ax1, large_dnns, large_FP16, large_BF16, large_FP8)
 
-fig1.legend(handles=legend_patches(), loc='upper center',
-            ncol=4, frameon=False, bbox_to_anchor=(0.5, 1.06))
-fig1.tight_layout(pad=0.5, rect=[0.08, 0.08, 1, 0.98])
-fig1.savefig('outputs/throughput_large.pdf', bbox_inches='tight')
-plt.close(fig1)
+#fig1.legend(handles=legend_patches(), loc='upper center',
+            # ncol=4, frameon=False, bbox_to_anchor=(0.5, 1.06))
+# fig1.tight_layout(pad=0.5, rect=[0.08, 0.08, 1, 0.98])
+# fig1.savefig('outputs/throughput_large.pdf', bbox_inches='tight')
+# plt.close(fig1)
 
 # ── Edge-device figure ────────────────────────────────────────────────────────
 fig2, ax2 = plt.subplots(figsize=scaled_figsize(4, 2))
