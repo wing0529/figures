@@ -142,23 +142,23 @@ large_total, large_refresh = load_normalized_energy(
 NORMALIZED = True
 
 # -- Colors & style ------------------------------------------------------------
-# COLORS ={
-#     'FP16': '#6A5C94',
-#     'BF16': '#8E7EA8',
-#     'FP8':  '#C99AB8'
-# }
-# REF_COLORS = {'FP16_refresh': '#8A4E7E',
-#               'BF16_refresh': '#BA7EAC',
-#               'FP8_refresh':  '#DCAECE'}
-
 COLORS ={
-    'FP16': '#3E2E5E',
-    'BF16': '#71618B' ,
-    'FP8':  '#BE6C91' 
+    'FP16': '#6A5C94',
+    'BF16': '#8E7EA8',
+    'FP8':  '#C99AB8'
 }
-REF_COLORS = {'FP16_refresh': '#3E2E5E',
-              'BF16_refresh': '#71618B' ,
-              'FP8_refresh':  '#BE6C91' }
+REF_COLORS = {'FP16_refresh': '#8A4E7E',
+              'BF16_refresh': '#BA7EAC',
+              'FP8_refresh':  '#DCAECE'}
+
+# COLORS ={
+#     'FP16': '#3E2E5E',
+#     'BF16': '#71618B' ,
+#     'FP8':  '#BE6C91' 
+# }
+# REF_COLORS = {'FP16_refresh': '#3E2E5E',
+#               'BF16_refresh': '#71618B' ,
+#               'FP8_refresh':  '#BE6C91' }
 
 
 #COLORS = {'FP16': '#D94A64', 'BF16': '#8C1F6F', 'FP8': '#2D1040'}

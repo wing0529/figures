@@ -1,0 +1,9 @@
+experiment,fault_param,fault_param_name,fault_param_val,trefi,trefi_val,ber,ppl,ppl_is_infinite,ppl_is_nan,tres_hours,temp_c,seed
+fault_llama_fp8_e4m3_bitwise_bit-0_bersem-independent_lpddr5_Vendor-A_trefi4096_tres1h_T45_ber-0.0001671646860548215_seed-42,bit-0,bit,0,trefi4096,4096,0.0001671646860548215,13.044766655298712,False,False,1.0,45.0,42
+fault_llama_fp8_e4m3_bitwise_bit-1_bersem-independent_lpddr5_Vendor-A_trefi4096_tres1h_T45_ber-0.0001671646860548215_seed-42,bit-1,bit,1,trefi4096,4096,0.0001671646860548215,13.049203886772398,False,False,1.0,45.0,42
+fault_llama_fp8_e4m3_bitwise_bit-2_bersem-independent_lpddr5_Vendor-A_trefi4096_tres1h_T45_ber-0.0001671646860548215_seed-42,bit-2,bit,2,trefi4096,4096,0.0001671646860548215,13.075855273643583,False,False,1.0,45.0,42
+fault_llama_fp8_e4m3_bitwise_bit-3_bersem-independent_lpddr5_Vendor-A_trefi4096_tres1h_T45_ber-0.0001671646860548215_seed-42,bit-3,bit,3,trefi4096,4096,0.0001671646860548215,13.305693030892234,False,False,1.0,45.0,42
+fault_llama_fp8_e4m3_bitwise_bit-4_bersem-independent_lpddr5_Vendor-A_trefi4096_tres1h_T45_ber-0.0001671646860548215_seed-42,bit-4,bit,4,trefi4096,4096,0.0001671646860548215,24.074792234627175,False,False,1.0,45.0,42
+fault_llama_fp8_e4m3_bitwise_bit-5_bersem-independent_lpddr5_Vendor-A_trefi4096_tres1h_T45_ber-0.0001671646860548215_seed-42,bit-5,bit,5,trefi4096,4096,0.0001671646860548215,47928779313.3613,False,False,1.0,45.0,42
+fault_llama_fp8_e4m3_bitwise_bit-6_bersem-independent_lpddr5_Vendor-A_trefi4096_tres1h_T45_ber-0.0001671646860548215_seed-42,bit-6,bit,6,trefi4096,4096,0.0001671646860548215,NaN,False,True,1.0,45.0,42
+fault_llama_fp8_e4m3_bitwise_bit-7_bersem-independent_lpddr5_Vendor-A_trefi4096_tres1h_T45_ber-0.0001671646860548215_seed-42,bit-7,bit,7,trefi4096,4096,0.0001671646860548215,13.225446161130833,False,False,1.0,45.0,42

@@ -15,10 +15,11 @@ ROOT = Path("/gem5/SCALE-SIMv3_Ramulator2/SCALE-Sim")
 OUT = Path(__file__).resolve().parent / "outputs"
 OUT.mkdir(parents=True, exist_ok=True)
 
-COMPARISON_CSV = ROOT / "analysis_results/evaluation_pcm_approx_seqstrict/pcm_approx_comparison.csv"
-PER_LAYER_CSV = ROOT / "analysis_results/evaluation_pcm_approx_seqstrict/pcm_approx_per_layer.csv"
-LLAMA_ROWSPLIT_CSV = ROOT / "analysis_results/evaluation_pcm_approx_rowsplit_seq/llama_rowsplit_controller_per_layer.csv"
-OPT_RESNET_ROWSPLIT_CSV = ROOT / "analysis_results/evaluation_pcm_approx_rowsplit_seq/opt_resnet_rowsplit_controller_per_layer.csv"
+RESULT_DIR = ROOT / "analysis_results/evaluation_pcm_approx_final"
+COMPARISON_CSV = RESULT_DIR / "pcm_approx_comparison.csv"
+PER_LAYER_CSV = RESULT_DIR / "pcm_approx_per_layer.csv"
+LLAMA_ROWSPLIT_CSV = RESULT_DIR / "llama_rowsplit_controller_per_layer.csv"
+OPT_RESNET_ROWSPLIT_CSV = RESULT_DIR / "opt_resnet_rowsplit_controller_per_layer.csv"
 
 MODEL_KEYS = ["llama", "opt", "resnet"]
 MODEL_LABELS = ["Llama 3.2-1B", "OPT-2.7B", "ResNet-50"]

@@ -638,11 +638,6 @@ def main(model=DEFAULT_MODEL, metric=DEFAULT_METRIC,
 
 
 
-    # comment \gunjae{Font size is too small. Use arial narrow with bold. 
-    # It would be better if we can indicate sign, exponent, and mantissa fields on the graph}   
-
-
-
 
 if __name__ == "__main__":
     import argparse

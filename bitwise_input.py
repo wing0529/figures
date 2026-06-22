@@ -9,7 +9,8 @@ from typing import Any, Iterable
 
 
 EXP_RE = re.compile(
-    r"^fault_(?P<model>[^_]+)_fp16_bitwise16_bit16-(?P<bit>\d+)_"
+    r"^fault_(?P<model>[^_]+)_(?P<fmt>fp16|bf16|fp8_e4m3)_"
+    r"bitwise(?P<fmt_bits>\d*)_bit(?P<bit_width>\d*)-(?P<bit>\d+)_"
     r"(?:bersem-independent_)?lpddr5_Vendor-A_trefi(?P<trefi>\d+)_"
     r"tres(?P<tres>[0-9.]+)h_T(?P<temp>[-0-9.]+)_"
     r"ber-(?P<ber>[^_]+)_seed-(?P<seed>\d+)$"
@@ -47,14 +48,15 @@ def payload_metric(payload: dict[str, Any], metric: str) -> float | None:
 
 
 def _looks_like_csv(path: Path) -> bool:
-    if path.suffix.lower() == ".csv":
-        return True
     with path.open("r", encoding="utf-8") as handle:
         for line in handle:
             stripped = line.lstrip()
-            if stripped:
-                return not stripped.startswith("{")
-    return False
+            if not stripped:
+                continue
+            if stripped.startswith("{") or stripped.startswith('"{'):
+                return False
+            return path.suffix.lower() == ".csv" or "," in stripped
+    return path.suffix.lower() == ".csv"
 
 
 def _paths(paths: Path | Iterable[Path]) -> list[Path]:
@@ -85,6 +87,13 @@ def _iter_json_objects(line: str, path: Path, lineno: int) -> Iterable[dict[str,
             raise ValueError(
                 f"{path}:{lineno} is not valid JSONL. CSV inputs are auto-detected by .csv suffix."
             ) from exc
+        if isinstance(payload, str):
+            stripped_payload = payload.strip()
+            if stripped_payload.startswith("{"):
+                try:
+                    payload = json.loads(stripped_payload)
+                except json.JSONDecodeError:
+                    pass
         if isinstance(payload, dict):
             yielded = True
             yield payload
@@ -159,7 +168,7 @@ def load_metric_rows(paths: Path | Iterable[Path], model: str, metric: str) -> l
             rows.extend(_load_jsonl_metric_rows([path], model, metric))
     if not rows:
         searched = ", ".join(str(path) for path in input_paths)
-        raise RuntimeError(f"No bitwise16 rows found for model={model}, metric={metric} in {searched}")
+        raise RuntimeError(f"No bitwise rows found for model={model}, metric={metric} in {searched}")
     rows_by_key = {(row["trefi_val"], row["fault_param_val"]): row for row in rows}
     return [rows_by_key[key] for key in sorted(rows_by_key)]
 
